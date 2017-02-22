@@ -37,8 +37,6 @@ public class AddStudentActivity extends BaseActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        final DatabaseReference childrenRef = FirebaseUtil.getChildrenRef();
-
         setTitle("Add Student");
 
         Button buttonLoadImage = (Button) findViewById(R.id.add_picture_button);
@@ -67,35 +65,52 @@ public class AddStudentActivity extends BaseActivity {
                     Toast.makeText(AddStudentActivity.this, R.string.user_logged_out_error,
                             Toast.LENGTH_SHORT).show();
                 } else {
-                    DatabaseReference childRef = FirebaseUtil.getChildrenRef().push();
-                    String childKey = childRef.getKey();
+                    DatabaseReference studentRef = FirebaseUtil.getStudentsRef().push();
+                    //String studentKey = studentRef.getKey();
 
+                    Map studentParentsValues = new HashMap();
+                    studentParentsValues.put(FirebaseUtil.getCurrentUserId(), FirebaseUtil.getCurrentUserId());
 
-                    Map childParentsValues = new HashMap();
-                    childParentsValues.put(FirebaseUtil.getCurrentUserId(), FirebaseUtil.getCurrentUserId());
+                    Map studentValues = new HashMap();
+                    studentValues.put("bluetooth", "11:22:33:44:55:66");
+                    studentValues.put("name", name);
+                    studentValues.put("info", info);
+                    studentValues.put("status", "waiting");
+                    studentValues.put("parents", studentParentsValues);
 
-                    Map childValues = new HashMap();
-                    childValues.put("bluetooth", "11:22:33:44:55:66");
-                    childValues.put("name", name);
-                    childValues.put("info", info);
-                    childValues.put("status", "waiting");
-                    childValues.put("parents", childParentsValues);
-
-                    Map updatedData = new HashMap();
-                    updatedData.put("children/" + childKey, childValues);
-                    updatedData.put("parents/" + FirebaseUtil.getCurrentUserId() + "/children/" + childKey, childKey);
+                    //Map updatedData = new HashMap();
+                    //updatedData.put("students/" + studentKey, studentValues);
+                    //updatedData.put("users/" + FirebaseUtil.getCurrentUserId() + "/students/" + studentKey, studentKey);
 
                     Log.d(TAG, "UID: " + user.getUid());
 
-                    FirebaseUtil.getBaseRef().updateChildren(
-                            updatedData,
+                    studentRef.updateChildren(
+                            studentValues,
                             new DatabaseReference.CompletionListener() {
                                 @Override
                                 public void onComplete(DatabaseError firebaseError, DatabaseReference databaseReference) {
+                                    Log.d(TAG, "Student reference: " + databaseReference.toString());
                                     if (firebaseError != null) {
                                         Toast.makeText(AddStudentActivity.this,
-                                                "Couldn't save child data: " + firebaseError.getMessage(),
+                                                "Couldn't save student data: " + firebaseError.getMessage(),
                                                 Toast.LENGTH_LONG).show();
+                                    } else {
+                                        DatabaseReference parentStudentRef = FirebaseUtil.getUserStudentsRef(FirebaseUtil.getCurrentUserId()).child(databaseReference.getKey());
+                                        Map parentStudentUpdate = new HashMap();
+                                        parentStudentUpdate.put(databaseReference.getKey(), databaseReference.getKey());
+                                        Log.d(TAG, "Parent student key: " + databaseReference.getKey().toString());
+                                        parentStudentRef.updateChildren(parentStudentUpdate,
+                                                new DatabaseReference.CompletionListener() {
+                                                    @Override
+                                                    public void onComplete(DatabaseError firebaseError, DatabaseReference databaseReference) {
+                                                        Log.d(TAG, "Parent student reference: " + databaseReference.toString());
+                                                        if (firebaseError != null) {
+                                                            Toast.makeText(AddStudentActivity.this,
+                                                                    "Couldn't save parent student data: " + firebaseError.getMessage(),
+                                                                    Toast.LENGTH_LONG).show();
+                                                        }
+                                                    }
+                                                });
                                     }
                                 }
                             });

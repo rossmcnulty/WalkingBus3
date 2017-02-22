@@ -42,7 +42,7 @@ public class ParentActivity extends BaseActivity implements
     private TextView mProfileUsername;
     private GoogleApiClient mGoogleApiClient;
     private ArrayList<Student> mStudents;
-    private ParentStudentAdapter mChildAdapter;
+    private ParentStudentAdapter mStudentAdapter;
 
     private static final int RC_SIGN_IN = 103;
 
@@ -55,6 +55,8 @@ public class ParentActivity extends BaseActivity implements
 
         // Initialize authentication and set up callbacks
         mAuth = FirebaseAuth.getInstance();
+
+        mStudents = new ArrayList<Student>();
 
         // GoogleApiClient with Sign In
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -84,31 +86,32 @@ public class ParentActivity extends BaseActivity implements
         recycler.setLayoutManager(new LinearLayoutManager(this));
 
         // get all of a parents students
-        DatabaseReference parentChildrenRef = FirebaseUtil.getParentChildrenRef(FirebaseUtil.getCurrentUserId());
-        parentChildrenRef.addValueEventListener(new ValueEventListener() {
+        DatabaseReference parentStudentsRef = FirebaseUtil.getUserStudentsRef(FirebaseUtil.getCurrentUserId());
+        parentStudentsRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot childSnapshot: dataSnapshot.getChildren()) {
-                    String key = childSnapshot.getKey();
-                    DatabaseReference childRef = FirebaseUtil.getChildrenRef().child(key);
-                    childRef.addValueEventListener(new ValueEventListener() {
+                for (DataSnapshot studentSnapshot: dataSnapshot.getChildren()) {
+                    String key = studentSnapshot.getKey();
+                    DatabaseReference studentRef = FirebaseUtil.getStudentsRef().child(key);
+                    Log.d(TAG, "Student ref: " + studentRef);
+                    studentRef.addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-                            Student c = dataSnapshot.getValue(Student.class);
+                            Student s = dataSnapshot.getValue(Student.class);
                             boolean found = false;
                             for(int i = 0; i < mStudents.size(); i++) {
                                 Student student = mStudents.get(i);
-                                if(student.getName().equals(c.getName())) {
-                                    mStudents.set(i, c);
+                                if(student.getName().equals(s.getName())) {
+                                    mStudents.set(i, s);
                                     found = true;
                                     break;
                                 }
                             }
                             if(!found) {
-                                mStudents.add(c);
+                                mStudents.add(s);
                             }
-                            mChildAdapter.notifyDataSetChanged();
-                            Log.d(TAG, "child name: " + c.getName());
+                            mStudentAdapter.notifyDataSetChanged();
+                            Log.d(TAG, "student name: " + s.getName());
                         }
 
                         @Override
@@ -121,9 +124,9 @@ public class ParentActivity extends BaseActivity implements
             public void onCancelled(DatabaseError firebaseError) { }
         });
 
-        mChildAdapter = new ParentStudentAdapter(mStudents, this);
+        mStudentAdapter = new ParentStudentAdapter(mStudents, this);
 
-        recycler.setAdapter(mChildAdapter);
+        recycler.setAdapter(mStudentAdapter);
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);

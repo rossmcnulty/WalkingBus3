@@ -22,16 +22,16 @@ class FirebaseUtil {
         return null;
     }
 
-    public static DatabaseReference getParentRef() {
-        return getBaseRef().child("parents");
+    public static DatabaseReference getUserRef() {
+        return getBaseRef().child("users");
     }
 
-    public static DatabaseReference getParentChildrenRef(String key) {
-        return getParentRef().child(key).child("children");
+    public static DatabaseReference getUserStudentsRef(String key) {
+        return getUserRef().child(key).child("students");
     }
 
-    public static DatabaseReference getChildrenRef() {
-        return getBaseRef().child("children");
+    public static DatabaseReference getStudentsRef() {
+        return getBaseRef().child("students");
     }
 
 }

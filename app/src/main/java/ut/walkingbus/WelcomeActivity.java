@@ -1,10 +1,14 @@
 package ut.walkingbus;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.text.InputType;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
@@ -36,6 +40,7 @@ public class WelcomeActivity extends BaseActivity implements View.OnClickListene
     private GoogleApiClient mGoogleApiClient;
     public static FirebaseUser currentUser;
     private boolean parent;
+    private String userPhoneNumber = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -120,40 +125,69 @@ public class WelcomeActivity extends BaseActivity implements View.OnClickListene
                 });
     }
 
+    private void getUserPhoneNumber() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Enter Phone Number");
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_PHONE);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                userPhoneNumber = input.getText().toString();
+                Map<String, Object> updateValues = new HashMap<>();
+                updateValues.put("displayName", currentUser.getDisplayName() != null ? currentUser.getDisplayName() : "Unknown");
+                updateValues.put("photoUrl", currentUser.getPhotoUrl() != null ? currentUser.getPhotoUrl().toString() : null);
+                updateValues.put("email", currentUser.getEmail() != null ? currentUser.getEmail() : "Unknown");
+                updateValues.put("phone", !(userPhoneNumber.equals("")) ? userPhoneNumber : "Unknown");
+
+
+                Map studentMap = new HashMap<>();
+                studentMap.put("-KdbRLbm7Wk42QG264wb","-KdbRLbm7Wk42QG264wb");
+                updateValues.put("students", studentMap);
+                // updateValues.put("schools", null);
+
+                FirebaseUtil.getUserRef().child(currentUser.getUid()).updateChildren(
+                        updateValues,
+                        new DatabaseReference.CompletionListener() {
+                            @Override
+                            public void onComplete(DatabaseError firebaseError, DatabaseReference databaseReference) {
+                                if (firebaseError != null) {
+                                    Toast.makeText(WelcomeActivity.this,
+                                            "Couldn't save user data: " + firebaseError.getMessage(),
+                                            Toast.LENGTH_LONG).show();
+                                }
+                            }
+                        });
+
+                if(parent) {
+                    // go to parent activity
+                    Intent parentLoginIntent = new Intent(getBaseContext(), ParentActivity.class);
+                    startActivity(parentLoginIntent);
+                } else {
+                    // go to chaperone activity
+                    Intent chaperoneLoginIntent = new Intent(getBaseContext(), ChaperoneActivity.class);
+                    startActivity(chaperoneLoginIntent);
+                }
+            }
+        });
+
+        builder.show();
+    }
+
+
     private void handleFirebaseAuthResult(AuthResult result) {
         // TODO: This auth callback isn't being called after orientation change. Investigate.
         dismissProgressDialog();
         if (result != null) {
             Log.d(TAG, "handleFirebaseAuthResult:SUCCESS");
             currentUser = result.getUser();
-
-            Map<String, Object> updateValues = new HashMap<>();
-            updateValues.put("displayName", currentUser.getDisplayName() != null ? currentUser.getDisplayName() : "Anonymous");
-            updateValues.put("photoUrl", currentUser.getPhotoUrl() != null ? currentUser.getPhotoUrl().toString() : null);
-            updateValues.put("email", currentUser.getEmail() != null ? currentUser.getEmail() : "Anonymous");
-
-            FirebaseUtil.getParentRef().child(currentUser.getUid()).updateChildren(
-                    updateValues,
-                    new DatabaseReference.CompletionListener() {
-                        @Override
-                        public void onComplete(DatabaseError firebaseError, DatabaseReference databaseReference) {
-                            if (firebaseError != null) {
-                                Toast.makeText(WelcomeActivity.this,
-                                        "Couldn't save user data: " + firebaseError.getMessage(),
-                                        Toast.LENGTH_LONG).show();
-                            }
-                        }
-                    });
-
-            if(parent) {
-                // go to parent activity
-                Intent parentLoginIntent = new Intent(this, ParentActivity.class);
-                startActivity(parentLoginIntent);
-            } else {
-                // go to chaperone activity
-                Intent chaperoneLoginIntent = new Intent(this, ChaperoneActivity.class);
-                startActivity(chaperoneLoginIntent);
-            }
+            getUserPhoneNumber();
         } else {
             Toast.makeText(this, "Authentication failed.", Toast.LENGTH_SHORT).show();
         }

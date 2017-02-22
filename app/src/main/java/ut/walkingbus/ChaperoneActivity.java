@@ -166,7 +166,7 @@ public class ChaperoneActivity extends BaseActivity implements
         updateValues.put("displayName", firebaseUser.getDisplayName() != null ? firebaseUser.getDisplayName() : "Anonymous");
         updateValues.put("photoUrl", firebaseUser.getPhotoUrl() != null ? firebaseUser.getPhotoUrl().toString() : null);
 
-        FirebaseUtil.getParentRef().child(firebaseUser.getUid()).updateChildren(
+        FirebaseUtil.getUserRef().child(firebaseUser.getUid()).updateChildren(
                 updateValues,
                 new DatabaseReference.CompletionListener() {
                     @Override

@@ -49,7 +49,7 @@ public class EditStudentActivity extends BaseActivity {
         TextView mInfoView = (TextView)findViewById(R.id.add_info);
         Spinner mSchoolView = (Spinner)findViewById(R.id.add_school);
 
-        final DatabaseReference childrenRef = FirebaseUtil.getChildrenRef();
+        final DatabaseReference studentsRef = FirebaseUtil.getStudentsRef();
 
         setTitle("Add Student");
 
@@ -79,23 +79,23 @@ public class EditStudentActivity extends BaseActivity {
                     Toast.makeText(EditStudentActivity.this, R.string.user_logged_out_error,
                             Toast.LENGTH_SHORT).show();
                 } else {
-                    DatabaseReference childRef = FirebaseUtil.getChildrenRef().push();
-                    String childKey = childRef.getKey();
+                    DatabaseReference studentRef = FirebaseUtil.getStudentsRef().push();
+                    String studentKey = studentRef.getKey();
 
 
-                    Map childParentsValues = new HashMap();
-                    childParentsValues.put(FirebaseUtil.getCurrentUserId(), FirebaseUtil.getCurrentUserId());
+                    Map studentParentsValues = new HashMap();
+                    studentParentsValues.put(FirebaseUtil.getCurrentUserId(), FirebaseUtil.getCurrentUserId());
 
-                    Map childValues = new HashMap();
-                    childValues.put("bluetooth", "11:22:33:44:55:66");
-                    childValues.put("name", name);
-                    childValues.put("info", info);
-                    childValues.put("status", "waiting");
-                    childValues.put("parents", childParentsValues);
+                    Map studentValues = new HashMap();
+                    studentValues.put("bluetooth", "11:22:33:44:55:66");
+                    studentValues.put("name", name);
+                    studentValues.put("info", info);
+                    studentValues.put("status", "waiting");
+                    studentValues.put("parents", studentParentsValues);
 
                     Map updatedData = new HashMap();
-                    updatedData.put("children/" + childKey, childValues);
-                    updatedData.put("parents/" + FirebaseUtil.getCurrentUserId() + "/children/" + childKey, childKey);
+                    updatedData.put("students/" + studentKey, studentValues);
+                    updatedData.put("users/" + FirebaseUtil.getCurrentUserId() + "/children/" + studentKey, studentKey);
 
                     Log.d(TAG, "UID: " + user.getUid());
 
@@ -106,7 +106,7 @@ public class EditStudentActivity extends BaseActivity {
                                 public void onComplete(DatabaseError firebaseError, DatabaseReference databaseReference) {
                                     if (firebaseError != null) {
                                         Toast.makeText(EditStudentActivity.this,
-                                                "Couldn't save child data: " + firebaseError.getMessage(),
+                                                "Couldn't save student data: " + firebaseError.getMessage(),
                                                 Toast.LENGTH_LONG).show();
                                     }
                                 }
