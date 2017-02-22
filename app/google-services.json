@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "316259890399",
+    "firebase_url": "https://walkingbus-9b5dc.firebaseio.com",
+    "project_id": "walkingbus-9b5dc",
+    "storage_bucket": "walkingbus-9b5dc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:316259890399:android:c7fca1d2100718de",
+        "android_client_info": {
+          "package_name": "ut.walkingbus"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "316259890399-vruc2d2o7btb2lf1vj4vv17j3vknk0ml.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ut.walkingbus",
+            "certificate_hash": "E9406265DAE943ACD1886277B2D7D9AEE9EDCAE9"
+          }
+        },
+        {
+          "client_id": "316259890399-54rol7pqe8jnk9msiqa8kers8pvkh004.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6e5wJEmn1EmYPNkkqiUEcud4OKhJigWg"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "316259890399-54rol7pqe8jnk9msiqa8kers8pvkh004.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "316259890399-8bqpuomu5ha9snf8ltl2aculgo27941f.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.seniordesign.walkingbus"
+              }
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
