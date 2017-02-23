@@ -95,7 +95,7 @@ public class AddStudentActivity extends BaseActivity {
                                                 "Couldn't save student data: " + firebaseError.getMessage(),
                                                 Toast.LENGTH_LONG).show();
                                     } else {
-                                        DatabaseReference parentStudentRef = FirebaseUtil.getUserStudentsRef(FirebaseUtil.getCurrentUserId()).child(databaseReference.getKey());
+                                        DatabaseReference parentStudentRef = FirebaseUtil.getUserStudentsRef(FirebaseUtil.getCurrentUserId());
                                         Map parentStudentUpdate = new HashMap();
                                         parentStudentUpdate.put(databaseReference.getKey(), databaseReference.getKey());
                                         Log.d(TAG, "Parent student key: " + databaseReference.getKey().toString());

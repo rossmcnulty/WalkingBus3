@@ -25,8 +25,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.crash.FirebaseCrash;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -146,10 +148,9 @@ public class WelcomeActivity extends BaseActivity implements View.OnClickListene
                 updateValues.put("email", currentUser.getEmail() != null ? currentUser.getEmail() : "Unknown");
                 updateValues.put("phone", !(userPhoneNumber.equals("")) ? userPhoneNumber : "Unknown");
 
-
-                Map studentMap = new HashMap<>();
-                studentMap.put("-KdbRLbm7Wk42QG264wb","-KdbRLbm7Wk42QG264wb");
-                updateValues.put("students", studentMap);
+                // Map studentMap = new HashMap<>();
+                // studentMap.put("-KdbRLbm7Wk42QG264wb","-KdbRLbm7Wk42QG264wb");
+                // updateValues.put("students", studentMap);
                 // updateValues.put("schools", null);
 
                 FirebaseUtil.getUserRef().child(currentUser.getUid()).updateChildren(
@@ -164,30 +165,44 @@ public class WelcomeActivity extends BaseActivity implements View.OnClickListene
                                 }
                             }
                         });
-
-                if(parent) {
-                    // go to parent activity
-                    Intent parentLoginIntent = new Intent(getBaseContext(), ParentActivity.class);
-                    startActivity(parentLoginIntent);
-                } else {
-                    // go to chaperone activity
-                    Intent chaperoneLoginIntent = new Intent(getBaseContext(), ChaperoneActivity.class);
-                    startActivity(chaperoneLoginIntent);
-                }
+                swapActivity();
             }
         });
 
         builder.show();
     }
 
+    private void swapActivity() {
+        if(parent) {
+            // go to parent activity
+            Intent parentLoginIntent = new Intent(getBaseContext(), ParentActivity.class);
+            startActivity(parentLoginIntent);
+        } else {
+            // go to chaperone activity
+            Intent chaperoneLoginIntent = new Intent(getBaseContext(), ChaperoneActivity.class);
+            startActivity(chaperoneLoginIntent);
+        }
+    }
+
 
     private void handleFirebaseAuthResult(AuthResult result) {
-        // TODO: This auth callback isn't being called after orientation change. Investigate.
         dismissProgressDialog();
         if (result != null) {
             Log.d(TAG, "handleFirebaseAuthResult:SUCCESS");
             currentUser = result.getUser();
-            getUserPhoneNumber();
+            FirebaseUtil.getUserRef().child(currentUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        swapActivity();
+                    } else {
+                        getUserPhoneNumber();
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError firebaseError) { }
+            });
         } else {
             Toast.makeText(this, "Authentication failed.", Toast.LENGTH_SHORT).show();
         }
