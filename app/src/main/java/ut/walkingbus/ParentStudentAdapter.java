@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -33,12 +34,14 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
     public class MyViewHolder extends RecyclerView.ViewHolder {
         public TextView name, status, chaperone_name;
         public ImageView picture;
+        public Button edit;
         public View call, message;
 
 
         public MyViewHolder(View view) {
             super(view);
             name = (TextView) view.findViewById(R.id.name);
+            edit = (Button) view.findViewById(R.id.edit);
             status = (TextView) view.findViewById(R.id.status);
             chaperone_name = (TextView) view.findViewById(R.id.chaperone_name);
             call = view.findViewById(R.id.call);
@@ -68,6 +71,13 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
         holder.status.setText(student.getStatus());
         String status = student.getStatus();
         Log.d(TAG, "Status: " + status);
+        holder.edit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent editStudentIntent = new Intent(mContext, EditStudentActivity.class);
+                mContext.startActivity(editStudentIntent);
+            }
+        });
 
         if(status.equals(mContext.getString(R.string.status_picked_up)) ||
                 status.equals(mContext.getString(R.string.status_lost))) {

@@ -36,7 +36,9 @@
         <activity
             android:name=".AddStudentActivity"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".EditStudentActivity" />
+        <activity
+            android:name=".EditStudentActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".CreateAccountActivity"
             android:label="@string/title_activity_create_account"
