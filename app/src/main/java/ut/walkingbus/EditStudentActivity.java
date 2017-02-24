@@ -134,7 +134,7 @@ public class EditStudentActivity extends BaseActivity {
             String picturePath = cursor.getString(columnIndex);
             cursor.close();
 
-            ImageView imageView = (ImageView) findViewById(R.id.add_picture_preview);
+            ImageView imageView = (ImageView) findViewById(R.id.add_photo_preview);
             imageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
 
         }

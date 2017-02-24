@@ -7,6 +7,10 @@
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -32,7 +36,11 @@
         <activity
             android:name=".AddStudentActivity"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".EditStudentActivity"></activity>
+        <activity android:name=".EditStudentActivity" />
+        <activity
+            android:name=".CreateAccountActivity"
+            android:label="@string/title_activity_create_account"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

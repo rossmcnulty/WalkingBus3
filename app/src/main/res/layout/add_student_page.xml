@@ -12,7 +12,7 @@
         android:weightSum="1">
 
         <ImageView
-            android:id="@+id/add_picture_preview"
+            android:id="@+id/add_photo_preview"
             android:layout_width="72dp"
             android:layout_height="72dp"
             android:layout_marginTop="20dp"
@@ -44,7 +44,7 @@
         android:layout_height="wrap_content"
         android:text="Full Name"
         android:layout_marginLeft="15dp"
-        android:layout_marginTop="20dp"/>
+        android:layout_marginTop="15dp"/>
 
     <EditText
         android:id="@+id/add_name"
@@ -52,7 +52,7 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="15dp"
         android:layout_marginRight="15dp"
-        android:layout_marginBottom="20dp"/>
+        android:layout_marginBottom="15dp"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -64,7 +64,7 @@
         android:id="@+id/add_school"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp">
+        android:layout_marginBottom="15dp">
     </Spinner>
 
     <TextView
@@ -77,10 +77,44 @@
     <EditText
         android:id="@+id/add_info"
         android:layout_width="fill_parent"
-        android:layout_height="100dp"
+        android:layout_height="80dp"
         android:layout_marginLeft="15dp"
         android:layout_marginRight="15dp"
-        android:layout_marginBottom="20dp"/>
+        android:layout_marginBottom="15dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Bluetooth ID"
+        android:layout_marginLeft="15dp"
+        android:backgroundTint="@android:color/background_light"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="1">
+
+        <TextView
+            android:id="@+id/add_bluetooth"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:layout_weight="1"
+            android:layout_gravity="center_vertical"/>
+
+        <Button
+            android:id="@+id/scan_bluetooth"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Scan"
+            android:layout_marginRight="12dp"
+            android:layout_gravity="center_vertical"
+            android:background="@color/blue"
+            android:textColor="@android:color/white"/>
+
+    </LinearLayout>
 
     <Button
         android:id="@+id/add_submit"

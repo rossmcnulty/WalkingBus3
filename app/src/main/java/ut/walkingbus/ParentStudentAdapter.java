@@ -40,7 +40,7 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
             super(view);
             name = (TextView) view.findViewById(R.id.name);
             status = (TextView) view.findViewById(R.id.status);
-            chaperone_name = (TextView) view.findViewById(R.id.chaperone_status);
+            chaperone_name = (TextView) view.findViewById(R.id.chaperone_name);
             call = view.findViewById(R.id.call);
             message = view.findViewById(R.id.text);
             picture = (ImageView) view.findViewById(R.id.child_image);
@@ -74,6 +74,7 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
 
             holder.message.setVisibility(VISIBLE);
             holder.call.setVisibility(VISIBLE);
+            holder.chaperone_name.setVisibility(VISIBLE);
 
             holder.message.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -99,6 +100,7 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
         } else {
             holder.message.setVisibility(GONE);
             holder.call.setVisibility(GONE);
+            holder.chaperone_name.setVisibility(GONE);
         }
     }
 
