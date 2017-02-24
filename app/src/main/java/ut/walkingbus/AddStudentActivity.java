@@ -19,27 +19,35 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import ut.walkingbus.Models.School;
 
 public class AddStudentActivity extends BaseActivity {
     private static final String TAG = "AddStudentActivity";
 
     private static int RESULT_LOAD_IMAGE = 1;
     private String name;
-    private String school;
+    private School mSchool;
     private String info;
+    private ArrayList<School> mSchoolArray;
+    private ArrayAdapter<School> mSchoolAdapter;
 
     private static final int MY_PERMISSION_RESPONSE = 2;
     private ArrayList<BluetoothDevice> sensorTagDevices = new ArrayList<BluetoothDevice>();
@@ -62,7 +70,7 @@ public class AddStudentActivity extends BaseActivity {
         // selectively disable BLE-related features.
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Toast.makeText(this, "BLE is not supported on this device", Toast.LENGTH_SHORT).show();
-            finish();
+            //finish();
         }
         // Prompt for permissions
         if (Build.VERSION.SDK_INT >= 23) {
@@ -71,6 +79,32 @@ public class AddStudentActivity extends BaseActivity {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSION_RESPONSE);
             }
         }
+
+        mSchoolArray = new ArrayList<School>();
+
+        mSchoolAdapter = new SchoolSpinAdapter(this, android.R.layout.simple_spinner_item, mSchoolArray);
+
+        mSchoolAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        Spinner sItems = (Spinner) findViewById(R.id.add_school);
+        sItems.setAdapter(mSchoolAdapter);
+
+        // get schools parent is a member of to populate spinner
+        DatabaseReference parentSchoolsRef = FirebaseUtil.getUserSchoolsParentRef(FirebaseUtil.getCurrentUserId());
+        parentSchoolsRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot schoolSnapshot: dataSnapshot.getChildren()) {
+                    String key = schoolSnapshot.getKey();
+                    String name = schoolSnapshot.getValue().toString();
+                    mSchoolAdapter.add(new School(name, key, false));
+                    Log.d(TAG, "School name: " + name);
+                }
+                mSchoolAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError firebaseError) { }
+        });
 
         Button buttonLoadImage = (Button) findViewById(R.id.add_picture_button);
         buttonLoadImage.setOnClickListener(new View.OnClickListener() {
@@ -102,17 +136,17 @@ public class AddStudentActivity extends BaseActivity {
 
             @Override
             public void onClick(View arg0) {
-                String name = ((TextView) findViewById(R.id.add_name)).getText().toString();
+                final String name = ((TextView) findViewById(R.id.add_name)).getText().toString();
                 String info = ((TextView) findViewById(R.id.add_info)).getText().toString();
                 String bluetooth = ((TextView) findViewById(R.id.add_bluetooth)).getText().toString();
+                mSchool = (School)((Spinner) findViewById(R.id.add_school)).getSelectedItem();
+                String schoolKey = mSchool.getKey();
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 if (user == null) {
                     Toast.makeText(AddStudentActivity.this, R.string.user_logged_out_error,
                             Toast.LENGTH_SHORT).show();
                 } else {
-                    DatabaseReference studentRef = FirebaseUtil.getStudentsRef().push();
-                    //String studentKey = studentRef.getKey();
-
+                    final DatabaseReference studentRef = FirebaseUtil.getStudentsRef().push();
                     Map studentParentsValues = new HashMap();
                     studentParentsValues.put(FirebaseUtil.getCurrentUserId(), FirebaseUtil.getCurrentUserId());
 
@@ -122,8 +156,10 @@ public class AddStudentActivity extends BaseActivity {
                     studentValues.put("info", info);
                     studentValues.put("status", "waiting");
                     studentValues.put("parents", studentParentsValues);
+                    studentValues.put("school", schoolKey);
 
                     Log.d(TAG, "UID: " + user.getUid());
+                    Log.d(TAG, "School: " + schoolKey);
 
                     studentRef.updateChildren(
                             studentValues,
@@ -138,7 +174,7 @@ public class AddStudentActivity extends BaseActivity {
                                     } else {
                                         DatabaseReference parentStudentRef = FirebaseUtil.getUserStudentsRef(FirebaseUtil.getCurrentUserId());
                                         Map parentStudentUpdate = new HashMap();
-                                        parentStudentUpdate.put(databaseReference.getKey(), databaseReference.getKey());
+                                        parentStudentUpdate.put(studentRef.getKey(), name);
                                         Log.d(TAG, "Parent student key: " + databaseReference.getKey().toString());
                                         parentStudentRef.updateChildren(parentStudentUpdate,
                                                 new DatabaseReference.CompletionListener() {
@@ -149,6 +185,23 @@ public class AddStudentActivity extends BaseActivity {
                                                             Toast.makeText(AddStudentActivity.this,
                                                                     "Couldn't save parent student data: " + firebaseError.getMessage(),
                                                                     Toast.LENGTH_LONG).show();
+                                                        } else {
+                                                            DatabaseReference schoolRef = FirebaseUtil.getSchoolStudentsRef(mSchool.getKey());
+                                                            Map schoolStudentsUpdate = new HashMap();
+                                                            schoolStudentsUpdate.put(studentRef.getKey(), name);
+                                                            schoolRef.updateChildren(schoolStudentsUpdate,
+                                                                    new DatabaseReference.CompletionListener() {
+                                                                        @Override
+                                                                        public void onComplete(DatabaseError firebaseError, DatabaseReference databaseReference) {
+                                                                            Log.d(TAG, "School student reference: " + databaseReference.toString());
+                                                                            if (firebaseError != null) {
+                                                                                Toast.makeText(AddStudentActivity.this,
+                                                                                        "Couldn't save school student data: " + firebaseError.getMessage(),
+                                                                                        Toast.LENGTH_LONG).show();
+                                                                            }
+                                                                        }
+                                                                    }
+                                                            );
                                                         }
                                                     }
                                                 });

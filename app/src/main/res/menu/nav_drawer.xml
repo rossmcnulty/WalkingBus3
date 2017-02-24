@@ -6,6 +6,12 @@
             android:id="@+id/nav_parent"
             android:title="Parent Home" />
         <item
+            android:id="@+id/nav_edit_account"
+            android:title="Edit Account" />
+        <item
+            android:id="@+id/nav_request_school"
+            android:title="Request School" />
+        <item
             android:id="@+id/nav_sign_out"
             android:title="Sign Out" />
     </group>

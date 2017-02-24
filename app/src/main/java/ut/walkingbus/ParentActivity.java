@@ -195,6 +195,12 @@ public class ParentActivity extends BaseActivity implements
             Auth.GoogleSignInApi.signOut(mGoogleApiClient);
             Intent welcomeIntent = new Intent(this, WelcomeActivity.class);
             startActivity(welcomeIntent);
+        } else if(id == R.id.nav_edit_account) {
+            Intent editAccountIntent = new Intent(this, WelcomeActivity.class);
+            startActivity(editAccountIntent);
+        } else if(id == R.id.nav_request_school) {
+            Intent requestSchoolIntent = new Intent(this, RequestSchoolActivity.class);
+            startActivity(requestSchoolIntent);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
