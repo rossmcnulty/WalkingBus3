@@ -98,6 +98,7 @@ public class ParentActivity extends BaseActivity implements
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             Student s = dataSnapshot.getValue(Student.class);
+                            s.setKey(dataSnapshot.getKey());
                             boolean found = false;
                             for(int i = 0; i < mStudents.size(); i++) {
                                 Student student = mStudents.get(i);

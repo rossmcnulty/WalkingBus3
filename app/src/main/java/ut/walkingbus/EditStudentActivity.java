@@ -38,14 +38,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ut.walkingbus.Models.School;
+import ut.walkingbus.Models.Student;
 
 public class EditStudentActivity extends BaseActivity {
     private static final String TAG = "EditStudentActivity";
 
     private static int RESULT_LOAD_IMAGE = 1;
-    private String name;
+    private String mName;
     private School mSchool;
-    private String info;
+    private String mInfo;
+    private String mBluetooth;
     private ArrayList<School> mSchoolArray;
     private ArrayAdapter<School> mSchoolAdapter;
 
@@ -80,6 +82,7 @@ public class EditStudentActivity extends BaseActivity {
             }
         }
 
+
         mSchoolArray = new ArrayList<School>();
 
         mSchoolAdapter = new SchoolSpinAdapter(this, android.R.layout.simple_spinner_item, mSchoolArray);
@@ -100,6 +103,25 @@ public class EditStudentActivity extends BaseActivity {
                     Log.d(TAG, "School name: " + name);
                 }
                 mSchoolAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError firebaseError) { }
+        });
+
+        String studentKey = getIntent().getStringExtra("STUDENT_KEY");
+        DatabaseReference studentRef = FirebaseUtil.getStudentsRef();
+
+        studentRef.child(studentKey).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Student s = dataSnapshot.getValue(Student.class);
+                ((TextView) findViewById(R.id.add_name)).setText(s.getName());
+                ((TextView) findViewById(R.id.add_bluetooth)).setText(s.getBluetooth());
+                ((TextView) findViewById(R.id.add_info)).setText(s.getInfo());
+                ((TextView) findViewById(R.id.add_name)).setText(s.getName());
+                // TODO: make spinner position correct to right school
+                // ((Spinner) findViewById(R.id.add_school)).setSelection();
             }
 
             @Override

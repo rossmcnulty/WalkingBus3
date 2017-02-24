@@ -75,6 +75,7 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
             @Override
             public void onClick(View v) {
                 Intent editStudentIntent = new Intent(mContext, EditStudentActivity.class);
+                editStudentIntent.putExtra("STUDENT_KEY", student.getKey());
                 mContext.startActivity(editStudentIntent);
             }
         });
