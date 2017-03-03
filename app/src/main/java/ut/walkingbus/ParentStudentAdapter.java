@@ -9,12 +9,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -34,14 +37,14 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
     public class MyViewHolder extends RecyclerView.ViewHolder {
         public TextView name, status, chaperone_name;
         public ImageView picture;
-        public Button edit;
+        public ImageButton options;
         public View call, message;
 
 
         public MyViewHolder(View view) {
             super(view);
             name = (TextView) view.findViewById(R.id.name);
-            edit = (Button) view.findViewById(R.id.edit);
+            options = (ImageButton) view.findViewById(R.id.options);
             status = (TextView) view.findViewById(R.id.status);
             chaperone_name = (TextView) view.findViewById(R.id.chaperone_name);
             call = view.findViewById(R.id.call);
@@ -71,12 +74,31 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
         holder.status.setText(student.getStatus());
         String status = student.getStatus();
         Log.d(TAG, "Status: " + status);
-        holder.edit.setOnClickListener(new View.OnClickListener() {
+        holder.options.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent editStudentIntent = new Intent(mContext, EditStudentActivity.class);
-                editStudentIntent.putExtra("STUDENT_KEY", student.getKey());
-                mContext.startActivity(editStudentIntent);
+                PopupMenu popup = new PopupMenu(mContext, v);
+                MenuInflater inflater = popup.getMenuInflater();
+                inflater.inflate(R.menu.menu_parent_student, popup.getMenu());
+                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    public boolean onMenuItemClick(MenuItem item) {
+                        switch (item.getItemId()) {
+                            case R.id.edit:
+                                Intent editStudentIntent = new Intent(mContext, EditStudentActivity.class);
+                                editStudentIntent.putExtra("STUDENT_KEY", student.getKey());
+                                mContext.startActivity(editStudentIntent);
+                                return true;
+                            case R.id.routes:
+                                Intent viewRoutesIntent = new Intent(mContext, RoutesActivity.class);
+                                viewRoutesIntent.putExtra("STUDENT_KEY", student.getKey());
+                                mContext.startActivity(viewRoutesIntent);
+                                return true;
+                            default:
+                                return false;
+                        }
+                    }
+                });
+                popup.show();
             }
         });
 

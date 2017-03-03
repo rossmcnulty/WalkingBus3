@@ -19,6 +19,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import ut.walkingbus.Models.School;
 
@@ -27,6 +28,8 @@ public class RequestSchoolActivity extends BaseActivity {
 
     private SchoolAdapter mSchoolAdapter;
     private ArrayList<School> mSchoolList;
+    private Map parentSchoolValues;
+    private FirebaseUser user;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -64,7 +67,7 @@ public class RequestSchoolActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
 
-                Map parentSchoolValues = new HashMap<>();
+                parentSchoolValues = new HashMap<>();
 
                 ArrayList<School> schoolList = mSchoolList;
                 for(int i=0; i < schoolList.size(); i++){
@@ -74,7 +77,7 @@ public class RequestSchoolActivity extends BaseActivity {
                     }
                 }
 
-                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                user = FirebaseAuth.getInstance().getCurrentUser();
                 if (user == null) {
                     Toast.makeText(RequestSchoolActivity.this, R.string.user_logged_out_error,
                             Toast.LENGTH_SHORT).show();
@@ -92,6 +95,24 @@ public class RequestSchoolActivity extends BaseActivity {
                                         Toast.makeText(RequestSchoolActivity.this,
                                                 "Couldn't save parent school data: " + firebaseError.getMessage(),
                                                 Toast.LENGTH_LONG).show();
+                                    } else {
+                                        Map schoolUserValues = new HashMap<>();
+                                        // TODO: remove ability to change username
+                                        schoolUserValues.put(user.getUid(), user.getDisplayName());
+                                        for(String schoolKey: (Set<String>) parentSchoolValues.keySet()) {
+                                            FirebaseUtil.getSchoolUsersRef(schoolKey).updateChildren(schoolUserValues,
+                                                    new DatabaseReference.CompletionListener() {
+                                                        @Override
+                                                        public void onComplete(DatabaseError firebaseError, DatabaseReference databaseReference) {
+                                                            if (firebaseError != null) {
+                                                                Toast.makeText(RequestSchoolActivity.this,
+                                                                        "Couldn't save school user data: " + firebaseError.getMessage(),
+                                                                        Toast.LENGTH_LONG).show();
+                                                            }
+                                                        }
+
+                                                    });
+                                        }
                                     }
                                 }
                             });

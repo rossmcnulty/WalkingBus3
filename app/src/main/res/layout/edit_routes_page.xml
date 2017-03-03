@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scroll"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <LinearLayout
+        android:orientation="vertical" android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="15dp"
+                android:orientation="vertical">
+
+
+
+                <TextView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Monday"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginRight="15dp"
+                    android:layout_gravity="center_vertical"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="15dp"
+                    android:weightSum="1">
+
+                    <TextView
+                        android:id="@+id/mon_am_text"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="15dp"
+                        android:layout_marginRight="15dp"
+                        android:text="No AM route set"
+                        android:layout_weight="1"
+                        android:layout_gravity="center_vertical"/>
+
+                    <Button
+                        android:id="@+id/mon_am_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Edit"
+                        android:layout_marginRight="12dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@color/blue"
+                        android:textColor="@android:color/white"/>
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="15dp"
+                    android:weightSum="1">
+
+                    <TextView
+                        android:id="@+id/mon_pm_text"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="15dp"
+                        android:layout_marginRight="15dp"
+                        android:text="No PM route set"
+                        android:layout_weight="1"
+                        android:layout_gravity="center_vertical"/>
+
+                    <Button
+                        android:id="@+id/mon_pm_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Edit"
+                        android:layout_marginRight="12dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@color/blue"
+                        android:textColor="@android:color/white"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="15dp"
+                android:orientation="vertical">
+
+
+
+                <TextView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Tuesday"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginRight="15dp"
+                    android:layout_gravity="center_vertical"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="15dp"
+                    android:weightSum="1">
+
+                    <TextView
+                        android:id="@+id/tues_am_text"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="15dp"
+                        android:layout_marginRight="15dp"
+                        android:text="No AM route set"
+                        android:layout_weight="1"
+                        android:layout_gravity="center_vertical"/>
+
+                    <Button
+                        android:id="@+id/tues_am_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Edit"
+                        android:layout_marginRight="12dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@color/blue"
+                        android:textColor="@android:color/white"/>
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="15dp"
+                    android:weightSum="1">
+
+                    <TextView
+                        android:id="@+id/tues_pm_text"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="15dp"
+                        android:layout_marginRight="15dp"
+                        android:text="No PM route set"
+                        android:layout_weight="1"
+                        android:layout_gravity="center_vertical"/>
+
+                    <Button
+                        android:id="@+id/tues_pm_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Edit"
+                        android:layout_marginRight="12dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@color/blue"
+                        android:textColor="@android:color/white"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="15dp"
+                android:orientation="vertical">
+
+
+
+                <TextView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Wednesday"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginRight="15dp"
+                    android:layout_gravity="center_vertical"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="15dp"
+                    android:weightSum="1">
+
+                    <TextView
+                        android:id="@+id/wed_am_text"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="15dp"
+                        android:layout_marginRight="15dp"
+                        android:text="No AM route set"
+                        android:layout_weight="1"
+                        android:layout_gravity="center_vertical"/>
+
+                    <Button
+                        android:id="@+id/wed_am_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Edit"
+                        android:layout_marginRight="12dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@color/blue"
+                        android:textColor="@android:color/white"/>
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="15dp"
+                    android:weightSum="1">
+
+                    <TextView
+                        android:id="@+id/wed_pm_text"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="15dp"
+                        android:layout_marginRight="15dp"
+                        android:text="No PM route set"
+                        android:layout_weight="1"
+                        android:layout_gravity="center_vertical"/>
+
+                    <Button
+                        android:id="@+id/wed_pm_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Edit"
+                        android:layout_marginRight="12dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@color/blue"
+                        android:textColor="@android:color/white"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="15dp"
+                android:orientation="vertical">
+
+
+
+                <TextView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Thursday"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginRight="15dp"
+                    android:layout_gravity="center_vertical"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="15dp"
+                    android:weightSum="1">
+
+                    <TextView
+                        android:id="@+id/thurs_am_text"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="15dp"
+                        android:layout_marginRight="15dp"
+                        android:text="No AM route set"
+                        android:layout_weight="1"
+                        android:layout_gravity="center_vertical"/>
+
+                    <Button
+                        android:id="@+id/thurs_am_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Edit"
+                        android:layout_marginRight="12dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@color/blue"
+                        android:textColor="@android:color/white"/>
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="15dp"
+                    android:weightSum="1">
+
+                    <TextView
+                        android:id="@+id/thurs_pm_text"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="15dp"
+                        android:layout_marginRight="15dp"
+                        android:text="No PM route set"
+                        android:layout_weight="1"
+                        android:layout_gravity="center_vertical"/>
+
+                    <Button
+                        android:id="@+id/thurs_pm_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Edit"
+                        android:layout_marginRight="12dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@color/blue"
+                        android:textColor="@android:color/white"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="15dp"
+                android:orientation="vertical">
+
+
+
+                <TextView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Friday"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginRight="15dp"
+                    android:layout_gravity="center_vertical"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="15dp"
+                    android:weightSum="1">
+
+                    <TextView
+                        android:id="@+id/fri_am_text"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="15dp"
+                        android:layout_marginRight="15dp"
+                        android:text="No AM route set"
+                        android:layout_weight="1"
+                        android:layout_gravity="center_vertical"/>
+
+                    <Button
+                        android:id="@+id/fri_am_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Edit"
+                        android:layout_marginRight="12dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@color/blue"
+                        android:textColor="@android:color/white"/>
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="15dp"
+                    android:weightSum="1">
+
+                    <TextView
+                        android:id="@+id/fri_pm_text"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="15dp"
+                        android:layout_marginRight="15dp"
+                        android:text="No PM route set"
+                        android:layout_weight="1"
+                        android:layout_gravity="center_vertical"/>
+
+                    <Button
+                        android:id="@+id/fri_pm_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Edit"
+                        android:layout_marginRight="12dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@color/blue"
+                        android:textColor="@android:color/white"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray"/>
+
+
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

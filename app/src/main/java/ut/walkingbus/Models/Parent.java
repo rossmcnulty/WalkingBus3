@@ -11,7 +11,6 @@ public class Parent {
     private String uid;
 
     public Parent() {
-
     }
 
     public Parent(String full_name, String profile_picture, String uid) {

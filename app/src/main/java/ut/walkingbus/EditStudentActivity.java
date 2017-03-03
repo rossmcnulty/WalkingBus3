@@ -109,7 +109,7 @@ public class EditStudentActivity extends BaseActivity {
             public void onCancelled(DatabaseError firebaseError) { }
         });
 
-        String studentKey = getIntent().getStringExtra("STUDENT_KEY");
+        final String studentKey = getIntent().getStringExtra("STUDENT_KEY");
         DatabaseReference studentRef = FirebaseUtil.getStudentsRef();
 
         studentRef.child(studentKey).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -168,7 +168,7 @@ public class EditStudentActivity extends BaseActivity {
                     Toast.makeText(EditStudentActivity.this, R.string.user_logged_out_error,
                             Toast.LENGTH_SHORT).show();
                 } else {
-                    final DatabaseReference studentRef = FirebaseUtil.getStudentsRef().push();
+                    final DatabaseReference studentRef = FirebaseUtil.getStudentsRef().child(studentKey);
                     Map studentParentsValues = new HashMap();
                     studentParentsValues.put(FirebaseUtil.getCurrentUserId(), FirebaseUtil.getCurrentUserId());
 
@@ -193,40 +193,6 @@ public class EditStudentActivity extends BaseActivity {
                                         Toast.makeText(EditStudentActivity.this,
                                                 "Couldn't save student data: " + firebaseError.getMessage(),
                                                 Toast.LENGTH_LONG).show();
-                                    } else {
-                                        DatabaseReference parentStudentRef = FirebaseUtil.getUserStudentsRef(FirebaseUtil.getCurrentUserId());
-                                        Map parentStudentUpdate = new HashMap();
-                                        parentStudentUpdate.put(studentRef.getKey(), name);
-                                        Log.d(TAG, "Parent student key: " + databaseReference.getKey().toString());
-                                        parentStudentRef.updateChildren(parentStudentUpdate,
-                                                new DatabaseReference.CompletionListener() {
-                                                    @Override
-                                                    public void onComplete(DatabaseError firebaseError, DatabaseReference databaseReference) {
-                                                        Log.d(TAG, "Parent student reference: " + databaseReference.toString());
-                                                        if (firebaseError != null) {
-                                                            Toast.makeText(EditStudentActivity.this,
-                                                                    "Couldn't save parent student data: " + firebaseError.getMessage(),
-                                                                    Toast.LENGTH_LONG).show();
-                                                        } else {
-                                                            DatabaseReference schoolRef = FirebaseUtil.getSchoolStudentsRef(mSchool.getKey());
-                                                            Map schoolStudentsUpdate = new HashMap();
-                                                            schoolStudentsUpdate.put(studentRef.getKey(), name);
-                                                            schoolRef.updateChildren(schoolStudentsUpdate,
-                                                                    new DatabaseReference.CompletionListener() {
-                                                                        @Override
-                                                                        public void onComplete(DatabaseError firebaseError, DatabaseReference databaseReference) {
-                                                                            Log.d(TAG, "School student reference: " + databaseReference.toString());
-                                                                            if (firebaseError != null) {
-                                                                                Toast.makeText(EditStudentActivity.this,
-                                                                                        "Couldn't save school student data: " + firebaseError.getMessage(),
-                                                                                        Toast.LENGTH_LONG).show();
-                                                                            }
-                                                                        }
-                                                                    }
-                                                            );
-                                                        }
-                                                    }
-                                                });
                                     }
                                 }
                             });

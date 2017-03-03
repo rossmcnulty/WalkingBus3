@@ -1,131 +1,137 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <!-- we will only show this view for add student but use this layout for both add student and create group -->
-
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scroll"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:weightSum="1">
+        android:orientation="vertical" android:layout_width="match_parent"
+        android:scrollbars="vertical"
+        android:layout_height="match_parent">
 
-        <ImageView
-            android:id="@+id/add_photo_preview"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginLeft="12dp"
-            android:layout_marginRight="12dp"
-            android:background="@android:color/darker_gray"/>
-        <TextView
-            android:id="@+id/add_picture_filename"
-            android:layout_width="0dp"
+        <!-- we will only show this view for add student but use this layout for both add student and create group -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="No Photo"
-            android:layout_gravity="center_vertical"/>
+            android:orientation="horizontal"
+            android:weightSum="1">
 
-        <Button
-            android:id="@+id/add_picture_button"
+            <ImageView
+                android:id="@+id/add_photo_preview"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginLeft="12dp"
+                android:layout_marginRight="12dp"
+                android:background="@android:color/darker_gray"/>
+            <TextView
+                android:id="@+id/add_picture_filename"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="No Photo"
+                android:layout_gravity="center_vertical"/>
+
+            <Button
+                android:id="@+id/add_picture_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Browse"
+                android:layout_marginRight="12dp"
+                android:layout_gravity="center_vertical"
+                android:background="@color/blue"
+                android:textColor="@android:color/white"/>
+
+        </LinearLayout>
+
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Browse"
-            android:layout_marginRight="12dp"
-            android:layout_gravity="center_vertical"
-            android:background="@color/blue"
-            android:textColor="@android:color/white"/>
+            android:text="Full Name"
+            android:layout_marginLeft="15dp"
+            android:layout_marginTop="15dp"/>
 
-    </LinearLayout>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Full Name"
-        android:layout_marginLeft="15dp"
-        android:layout_marginTop="15dp"/>
-
-    <EditText
-        android:id="@+id/add_name"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="15dp"
-        android:layout_marginRight="15dp"
-        android:layout_marginBottom="15dp"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="School Name"
-        android:layout_marginLeft="15dp"/>
-
-    <Spinner
-        android:id="@+id/add_school"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="15dp"
-        android:layout_marginBottom="15dp">
-    </Spinner>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Medical Information"
-        android:layout_marginLeft="15dp"
-        android:backgroundTint="@android:color/background_light"/>
-
-    <EditText
-        android:id="@+id/add_info"
-        android:layout_width="fill_parent"
-        android:layout_height="80dp"
-        android:layout_marginLeft="15dp"
-        android:layout_marginRight="15dp"
-        android:layout_marginBottom="15dp"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Bluetooth ID"
-        android:layout_marginLeft="15dp"
-        android:backgroundTint="@android:color/background_light"/>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:weightSum="1">
-
-        <TextView
-            android:id="@+id/add_bluetooth"
+        <EditText
+            android:id="@+id/add_name"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_marginLeft="15dp"
             android:layout_marginRight="15dp"
-            android:layout_weight="1"
-            android:layout_gravity="center_vertical"/>
+            android:layout_marginBottom="15dp"/>
 
-        <Button
-            android:id="@+id/scan_bluetooth"
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Scan"
-            android:layout_marginRight="12dp"
-            android:layout_gravity="center_vertical"
+            android:text="School Name"
+            android:layout_marginLeft="15dp"/>
+
+        <Spinner
+            android:id="@+id/add_school"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="15dp"
+            android:layout_marginBottom="15dp">
+        </Spinner>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Medical Information"
+            android:layout_marginLeft="15dp"
+            android:backgroundTint="@android:color/background_light"/>
+
+        <EditText
+            android:id="@+id/add_info"
+            android:layout_width="fill_parent"
+            android:layout_height="80dp"
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:layout_marginBottom="15dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bluetooth ID"
+            android:layout_marginLeft="15dp"
+            android:backgroundTint="@android:color/background_light"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="15dp"
+            android:weightSum="1">
+
+            <TextView
+                android:id="@+id/add_bluetooth"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
+                android:layout_weight="1"
+                android:layout_gravity="center_vertical"/>
+
+            <Button
+                android:id="@+id/scan_bluetooth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Scan"
+                android:layout_marginRight="12dp"
+                android:layout_gravity="center_vertical"
+                android:background="@color/blue"
+                android:textColor="@android:color/white"/>
+
+        </LinearLayout>
+        <Button
+            android:id="@+id/add_submit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Submit"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"
+            android:layout_gravity="center_horizontal"
             android:background="@color/blue"
-            android:textColor="@android:color/white"/>
-
+            android:textColor="@android:color/white" />
     </LinearLayout>
-
-    <Button
-        android:id="@+id/add_submit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Submit"
-        android:layout_marginTop="20dp"
-        android:layout_gravity="center_horizontal"
-        android:background="@color/blue"
-        android:textColor="@android:color/white" />
-
-
-</LinearLayout>
+</ScrollView>

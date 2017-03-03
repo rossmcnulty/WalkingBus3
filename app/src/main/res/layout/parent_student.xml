@@ -19,8 +19,8 @@
                 android:layout_marginTop="20dp"
                 android:layout_marginLeft="12dp"
                 android:layout_marginRight="12dp"
-                android:src="@drawable/ic_person_outline_black_24dp"
-                android:background="@android:color/holo_blue_light"/>
+                android:src="@drawable/ic_person_outline_white_24dp"
+                android:background="@color/blue"/>
         </LinearLayout>
         <LinearLayout
             android:orientation="vertical"
@@ -29,7 +29,7 @@
             android:layout_gravity="center_horizontal|center_vertical">
             <TextView
                 android:id="@+id/name"
-                android:layout_width="170dp"
+                android:layout_width="200dp"
                 android:layout_height="wrap_content"
                 android:text="Filler Name"
                 android:layout_marginBottom="5dp"
@@ -42,14 +42,14 @@
                 android:text="Filler status"
                 android:layout_marginBottom="5dp"/>
         </LinearLayout>
-        <Button
-            android:id="@+id/edit"
+        <ImageButton
+            android:id="@+id/options"
+            android:background="@null"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@color/blue"
-            android:textColor="@android:color/white"
-            android:layout_gravity="center_horizontal|center_vertical"
-            android:text="Edit" />
+            android:src="@drawable/ic_more_vert_gray_24dp"
+            android:contentDescription="Student options"
+            android:layout_gravity="center" />
     </LinearLayout>
     <LinearLayout
         android:orientation="vertical"

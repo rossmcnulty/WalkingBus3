@@ -15,6 +15,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -79,6 +80,7 @@ public class CreateAccountActivity extends BaseActivity {
                     updateValues.put("photoUrl", mPhotoUrl);
                     updateValues.put("email", mEmail);
                     updateValues.put("phone", mPhone);
+                    updateValues.put("fcm", FirebaseInstanceId.getInstance().getToken());
 
                     Log.d(TAG, "Name: " + mName);
                     Log.d(TAG, "Phone: " + mPhone);

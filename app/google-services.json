@@ -19,7 +19,7 @@
           "client_type": 1,
           "android_info": {
             "package_name": "ut.walkingbus",
-            "certificate_hash": "E9406265DAE943ACD1886277B2D7D9AEE9EDCAE9"
+            "certificate_hash": "e9406265dae943acd1886277b2d7d9aee9edcae9"
           }
         },
         {
@@ -40,15 +40,15 @@
           "status": 2,
           "other_platform_oauth_client": [
             {
-              "client_id": "316259890399-54rol7pqe8jnk9msiqa8kers8pvkh004.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
               "client_id": "316259890399-8bqpuomu5ha9snf8ltl2aculgo27941f.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
                 "bundle_id": "com.seniordesign.walkingbus"
               }
+            },
+            {
+              "client_id": "316259890399-54rol7pqe8jnk9msiqa8kers8pvkh004.apps.googleusercontent.com",
+              "client_type": 3
             }
           ]
         },

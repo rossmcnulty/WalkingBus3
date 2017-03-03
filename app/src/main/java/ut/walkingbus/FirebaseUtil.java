@@ -38,8 +38,28 @@ class FirebaseUtil {
         return getBaseRef().child("school_names");
     }
 
+    public static DatabaseReference getStudentRoutesRef(String key) {
+        return getStudentsRef().child(key).child("routes");
+    }
+
+    public static DatabaseReference getSchoolsRoutesRef(String key) {
+        return getSchoolRef().child(key).child("routes");
+    }
+
+    public static DatabaseReference getRoutesRef() {
+        return getBaseRef().child("routes");
+    }
+
     public static DatabaseReference getUserSchoolsParentRef(String key) {
         return getUserRef().child(key).child("schools_parent");
+    }
+
+    public static DatabaseReference getRouteStudentsRef(String key) {
+        return getRoutesRef().child(key).child("students");
+    }
+
+    public static DatabaseReference getSchoolUsersRef(String key) {
+        return getSchoolRef().child(key).child("users");
     }
 
     public static DatabaseReference getSchoolStudentsRef(String key) {
