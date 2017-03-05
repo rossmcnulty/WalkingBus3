@@ -67,6 +67,7 @@ public class WelcomeActivity extends BaseActivity implements View.OnClickListene
                 break;
             case R.id.chaperone_button:
                 isParent = false;
+                launchSignInIntent();
                 break;
         }
     }

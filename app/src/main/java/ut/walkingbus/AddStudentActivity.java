@@ -294,7 +294,7 @@ public class AddStudentActivity extends BaseActivity {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            if(!sensorTagDevices.contains(device) && name != null && name.contains("SensorTag")){
+            if(!sensorTagDevices.contains(device) && name != null && name.toUpperCase().contains("WALKINGBUS")){
                 sensorTagDevices.add(device);
             }
 

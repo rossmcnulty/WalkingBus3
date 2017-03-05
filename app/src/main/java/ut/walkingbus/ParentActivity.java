@@ -165,7 +165,7 @@ public class ParentActivity extends BaseActivity implements
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.menu_parent, menu);
         return true;
     }
 
@@ -185,7 +185,7 @@ public class ParentActivity extends BaseActivity implements
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_parent) {
+        if (id == R.id.nav_home) {
             this.recreate();
         } else if(id == R.id.nav_sign_out) {
             Auth.GoogleSignInApi.signOut(mGoogleApiClient);

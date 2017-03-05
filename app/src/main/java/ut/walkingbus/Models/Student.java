@@ -1,5 +1,7 @@
 package ut.walkingbus.Models;
 
+import java.util.Map;
+
 /**
  * Created by Ross on 2/13/2017.
  */
@@ -10,6 +12,7 @@ public class Student {
     private String mKey;
     private String mBluetooth;
     private String mInfo;
+    private Map parents;
 
     public Student() {
     }
@@ -41,6 +44,14 @@ public class Student {
 
     public void setStatus(String status) {
         mStatus = status;
+    }
+
+    public void setParents(Map parents) {
+        this.parents = parents;
+    }
+
+    public Map getParents() {
+        return parents;
     }
 
     public String getName() {

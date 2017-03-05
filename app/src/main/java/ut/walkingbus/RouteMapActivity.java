@@ -34,6 +34,7 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
     private ArrayList<String> mRouteKeys;
     private DatabaseSchool mSchool;
     private String mStudentKey;
+    private String mStudentName;
     private String mTimeslot;
     private String mSchoolKey;
     private Marker mSchoolMarker;
@@ -73,6 +74,19 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
         mRoutes = new ArrayList<Route>();
         mRouteKeys = new ArrayList<String>();
 
+        studentRef.child("name").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                mStudentName = dataSnapshot.getValue().toString();
+                Log.d(TAG, "Student Name " + mStudentName);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
         studentRef.child("school").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -109,13 +123,17 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
                                             Route route = dataSnapshot.getValue(Route.class);
                                             route.setKey(dataSnapshot.getKey());
                                             mRoutes.add(route);
+                                            String chapKey = route.getChaperone();
+                                            String chapName = "";
+                                            // TODO: get chap name value programmatically
                                             Double lat = route.getLocation().get("lat");
                                             Double lng = route.getLocation().get("lng");
                                             LatLng routeStart = new LatLng(lat, lng);
                                             Marker routeMarker = mMap.addMarker(new MarkerOptions()
                                                     .position(routeStart)
                                                     .title(route.getName())
-                                                    .snippet("Click to select this route"));
+                                                    .snippet("Chaperone: " + chapName +
+                                                            "\nClick to select this route"));
                                             routeMarker.setTag(route.getKey());
                                         }
 
@@ -157,7 +175,9 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
 
         Map routeStudentsValues = new HashMap();
 
-        routeStudentsValues.put(mStudentKey, 1);
+        routeStudentsValues.put(mStudentKey, mStudentName);
+
+        // TODO: replace existing routes
 
         DatabaseReference routeStudentsRef = FirebaseUtil.getRouteStudentsRef(routeKey).child(mTimeslot.toLowerCase());
         routeStudentsRef.updateChildren(routeStudentsValues,

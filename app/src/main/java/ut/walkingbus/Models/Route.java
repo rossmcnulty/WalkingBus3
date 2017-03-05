@@ -15,6 +15,7 @@ public class Route {
     private String time;
     private String timeslot;
     private Map<String, Double> location;
+    private Map<String, Map<String, String>> students;
 
     public Route() {}
 
@@ -36,6 +37,10 @@ public class Route {
 
     public String getTime() {
         return time;
+    }
+
+    public Map<String, Map<String, String>> getStudents() {
+        return students;
     }
 
     public Map<String, Double> getLocation() {
@@ -60,6 +65,10 @@ public class Route {
 
     public void setSchool(String school) {
         this.school = school;
+    }
+
+    public void setStudents(Map<String, Map<String, String>> students) {
+        this.students = students;
     }
 
     public void setTime(String time) {
