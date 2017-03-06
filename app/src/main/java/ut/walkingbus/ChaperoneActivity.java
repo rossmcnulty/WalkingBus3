@@ -28,6 +28,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
@@ -42,6 +43,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import de.hdodenhof.circleimageview.CircleImageView;
 import ut.walkingbus.Models.Route;
 import ut.walkingbus.Models.Student;
 
@@ -51,21 +53,27 @@ public class ChaperoneActivity extends BaseActivity implements
     private static final String TAG = "ChaperoneActivity";
     private FirebaseAuth mAuth;
     private GoogleApiClient mGoogleApiClient;
-    private ArrayList<Student> mExpectedStudents;
-    private ArrayList<Student> mFoundStudents;
-    private ArrayList<Student> mPickedUpStudents;
-    private ArrayList<Student> mLostStudents;
+    //private ArrayList<Student> mExpectedStudents;
+    //private ArrayList<Student> mFoundStudents;
+    //private ArrayList<Student> mPickedUpStudents;
+    //private ArrayList<Student> mLostStudents;
+    private ArrayList<Student> mStudents;
     private ChaperoneStudentAdapter mStudentAdapter;
     private Route mRoute;
     private String mRouteKey;
     private String mTimeslot;
-    private boolean mPickedUp;
     private Context mContext;
     private int mCurrentDay;
 
-    private ArrayList<String> mExpectedBluetooth;
+    private ArrayList<String> mLostStudentPopups;
+
+    //private ArrayList<String> mExpectedBluetooth;
     private ArrayList<String> mFoundBluetooth;
     private ArrayList<String> mPickedUpBluetooth;
+
+    private CircleImageView mProfilePhoto;
+    private TextView mProfileEmail;
+    private TextView mProfileUsername;
 
     private static final int MY_PERMISSION_RESPONSE = 2;
     private ArrayList<BluetoothDevice> sensorTagDevices = new ArrayList<BluetoothDevice>();
@@ -88,17 +96,21 @@ public class ChaperoneActivity extends BaseActivity implements
 
         // TODO: don't hardcode these pls
         // TODO: picked up field?
-        mRouteKey = "route1";
+        mRouteKey = "-KeWJO4qs-CcAyFf1pcC";
         mTimeslot = "mon_am";
 
         setTitle("Today's Bus");
-        mPickedUp = false;
 
-        mExpectedStudents = new ArrayList<Student>();
-        mFoundStudents = new ArrayList<Student>();
-        mPickedUpStudents = new ArrayList<Student>();
+        //mExpectedStudents = new ArrayList<Student>();
+        //mFoundStudents = new ArrayList<Student>();
+        //mPickedUpStudents = new ArrayList<Student>();
+        //mLostStudents = new ArrayList<Student>();
+        mStudents = new ArrayList<Student>();
+        mLostStudentPopups = new ArrayList<String>();
 
-        mExpectedBluetooth = new ArrayList<>();
+        //mExpectedBluetooth = new ArrayList<>();
+        mFoundBluetooth = new ArrayList<>();
+
         // Use this check to determine whether BLE is supported on the device.  Then you can
         // selectively disable BLE-related features.
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
@@ -122,51 +134,82 @@ public class ChaperoneActivity extends BaseActivity implements
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(mRoute == null) {
+                    Log.d(TAG, "Route null");
+                    return;
+                }
+                Log.d(TAG, "FAB Clicked, status " + mRoute.getStatus());
                 // pick up children
-                if(!mPickedUp) {
+                if(mRoute.getStatus().toLowerCase().equals("waiting")) {
                     AlertDialog.Builder pickUpBuilder = new AlertDialog.Builder(mContext);
+                    final ArrayList<Student> foundStudents = new ArrayList<Student>();
                     String studentNames = "";
-                    for(Student s : mFoundStudents) {
-                        studentNames += "\n" + s.getName();
+                    for(Student s : mStudents) {
+                        if(mFoundBluetooth.contains(s.getBluetooth())) {
+                            foundStudents.add(s);
+                            studentNames += "\n" + s.getName();
+                        }
                     }
                     pickUpBuilder.setMessage("Confirm pickup of" + studentNames)
                             .setTitle("Pickup Confirmation");
                     pickUpBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             // User clicked OK button
-                            mPickedUpStudents.addAll(mFoundStudents);
-                            mPickedUp = true;
+                            for(Student s : foundStudents) {
+                                // Set all found students as picked up
+                                DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("status");
+                                studentStatusRef.setValue("picked up");
+                            }
+                            DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey).child("status");
+                            routeRef.setValue("picked up");
+                            dialog.dismiss();
+                            Log.d(TAG, "Setting picked up to true");
                         }
                     });
                     pickUpBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             // User cancelled the dialog
+                            dialog.dismiss();
                         }
                     });
-                    pickUpBuilder.create();
-                    Log.d(TAG, "Setting picked up to true");
-                    mPickedUp = true;
-                } else {
+                    AlertDialog pickUpAlert = pickUpBuilder.create();
+                    pickUpAlert.show();
+                } else if(mRoute.getStatus().toLowerCase().equals("picked up")) {
                     AlertDialog.Builder dropOffBuilder = new AlertDialog.Builder(mContext);
+                    final ArrayList<Student> pickedUpStudents = new ArrayList<Student>();
                     String studentNames = "";
-                    for(Student s : mPickedUpStudents) {
-                        studentNames += "\n" + s.getName();
+                    for(Student s : mStudents) {
+                        if(s.getStatus().toLowerCase().equals("picked up")) {
+                            studentNames += "\n" + s.getName();
+                            pickedUpStudents.add(s);
+                        }
                     }
                     dropOffBuilder.setMessage("Confirm dropoff of" + studentNames)
-                            .setTitle("Pickup Confirmation");
+                            .setTitle("Dropoff Confirmation");
                     dropOffBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             // User clicked OK button
+                            for(Student s : pickedUpStudents) {
+                                // Set all found students as picked up
+                                DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("status");
+                                studentStatusRef.setValue("dropped off");
+                            }
+                            Log.d(TAG, "Setting dropped off to true");
+                            DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey).child("status");
+                            routeRef.setValue("dropped off");
+                            dialog.dismiss();
                         }
                     });
                     dropOffBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             // User cancelled the dialog
+                            dialog.dismiss();
                         }
                     });
-                    dropOffBuilder.create();
-                    Log.d(TAG, "Setting picked up to true");
-                    mPickedUp = true;
+                    AlertDialog dropOffAlert = dropOffBuilder.create();
+                    dropOffAlert.show();
+                } else {
+                    Log.d(TAG, "Route status does not require chaperone interaction");
                 }
             }
         });
@@ -202,13 +245,14 @@ public class ChaperoneActivity extends BaseActivity implements
                     studentRef.addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
+                            Log.d(TAG, "Student reference " + dataSnapshot.getRef().toString());
                             Student s = dataSnapshot.getValue(Student.class);
                             s.setKey(dataSnapshot.getKey().toString());
                             boolean found = false;
-                            for(int i = 0; i < mExpectedStudents.size(); i++) {
-                                Student student = mExpectedStudents.get(i);
-                                if(student.getName().equals(s.getName())) {
-                                    mExpectedStudents.set(i, s);
+                            for(int i = 0; i < mStudents.size(); i++) {
+                                Student student = mStudents.get(i);
+                                if(student.getKey().equals(s.getKey())) {
+                                    mStudents.set(i, s);
                                     found = true;
                                     break;
                                 }
@@ -216,8 +260,8 @@ public class ChaperoneActivity extends BaseActivity implements
                             if(!found) {
                                 Log.d(TAG, "Adding student " + s.getName());
                                 Log.d(TAG, "Adding BT " + s.getBluetooth());
-                                mExpectedStudents.add(s);
-                                mExpectedBluetooth.add(s.getBluetooth());
+                                mStudents.add(s);
+                                //mExpectedBluetooth.add(s.getBluetooth());
                             }
                             mStudentAdapter.notifyDataSetChanged();
                             Log.d(TAG, "student name: " + s.getName());
@@ -235,13 +279,30 @@ public class ChaperoneActivity extends BaseActivity implements
             public void onCancelled(DatabaseError firebaseError) { }
         });
 
-        mStudentAdapter = new ChaperoneStudentAdapter(mExpectedStudents, this);
+        mStudentAdapter = new ChaperoneStudentAdapter(mStudents, this);
 
         recycler.setAdapter(mStudentAdapter);
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        View header = navigationView.getHeaderView(0);
+
+        mProfileUsername = (TextView)header.findViewById(R.id.nav_username);
+        mProfileEmail = (TextView)header.findViewById(R.id.nav_email);
+        mProfilePhoto = (CircleImageView) header.findViewById(R.id.profile_user_photo);
+
+        if (WelcomeActivity.currentUser.getDisplayName() != null) {
+            mProfileUsername.setText(WelcomeActivity.currentUser.getDisplayName());
+        }
+
+        if (WelcomeActivity.currentUser.getPhotoUrl() != null) {
+            GlideUtil.loadProfileIcon(WelcomeActivity.currentUser.getPhotoUrl().toString(), mProfilePhoto);
+        }
+
+        if (WelcomeActivity.currentUser.getEmail() != null) {
+            mProfileEmail.setText(WelcomeActivity.currentUser.getEmail());
+        }
     }
 
     @Override
@@ -315,7 +376,6 @@ public class ChaperoneActivity extends BaseActivity implements
     private Runnable startScan = new Runnable() {
         @Override
         public void run() {
-            allDevices.clear();
             scanHandler.postDelayed(stopScan, 5000); // invoke stop scan after 5000 ms
             mBLEAdapter.startLeScan(mLeScanCallback);
         }
@@ -334,9 +394,6 @@ public class ChaperoneActivity extends BaseActivity implements
         @SuppressLint("NewApi")
         public void onLeScan(final BluetoothDevice device, int rssi,
                              byte[] scanRecord) {
-            if(!allDevices.contains(device)){
-                allDevices.add(device);
-            }
             String address = device.getAddress();
             String name = device.getName();
             byte[] data = scanRecord;
@@ -363,37 +420,49 @@ public class ChaperoneActivity extends BaseActivity implements
     private Runnable stopScan = new Runnable() {
         @Override
         public void run() {
-            if(!mPickedUp) {
-                for (Student s : mExpectedStudents) {
-                    boolean found = false;
+            if(mRoute.getStatus().toLowerCase().equals("waiting")) {
+                for (Student s : mStudents) {
+                    Log.d(TAG, "BT Expected Student " + s.getName());
                     for (BluetoothDevice d : sensorTagDevices) {
+                        Log.d(TAG, "BT Expected BT " + d.getAddress());
                         if (d.getAddress().equals(s.getBluetooth())) {
-                            found = true;
+                            Log.d(TAG, "BT Expected BT Found");
+                            if(!mFoundBluetooth.contains(s.getBluetooth())) {
+                                mFoundBluetooth.add(d.getAddress());
+                            }
+                            break;
                         }
-                    }
-                    if (!found) {
-                        // TODO: ensure BT address is unique
-                        mFoundStudents.add(s);
                     }
                 }
             } else {
-                for (final Student s : mPickedUpStudents) {
+                for (final Student s : mStudents) {
+                    // we've picked up everyone
+                    // look for lost students
+                    // look for students that have become lost
+
                     boolean found = false;
+                    if(s.getStatus().toLowerCase().equals("waiting")) {
+                        // don't worry about non-picked up students
+                        Log.d(TAG, "Student " + s.getName() + " was never picked up");
+                    }
+
                     for (BluetoothDevice d : sensorTagDevices) {
                         if (d.getAddress().equals(s.getBluetooth())) {
+                            // found a matching student BT
                             found = true;
-                            for(Student lostStudent: mLostStudents) {
-                                if(lostStudent.getBluetooth().equals(s.getBluetooth())) {
-                                    // lost student found
-                                    mLostStudents.remove(lostStudent);
-                                    DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(lostStudent.getKey()).child("status");
-                                    studentStatusRef.setValue("picked up");
-                                }
+                            if (s.getStatus().toLowerCase().equals("lost")) {
+                                Log.d(TAG, "Recovered lost student " + s.getName());
+                                DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("status");
+                                studentStatusRef.setValue("picked up");
                             }
                         }
                     }
-                    if (!found) {
+
+                    if (!found && !mRoute.getStatus().toLowerCase().equals("dropped off")
+                            && !s.getStatus().toLowerCase().equals("lost")
+                            && !mLostStudentPopups.contains(s.getKey())) {
                         Log.d(TAG, "Could not find student " + s.getName());
+                        mLostStudentPopups.add(s.getKey());
                         AlertDialog.Builder lostAlertBuilder = new AlertDialog.Builder(mContext);
                         lostAlertBuilder.setMessage(s.getName() + " not found")
                                 .setTitle("Student Not Found");
@@ -401,26 +470,28 @@ public class ChaperoneActivity extends BaseActivity implements
                             public void onClick(DialogInterface dialog, int id) {
                                 // User clicked OK button
                                 DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("status");
-                                mLostStudents.add(s);
                                 studentStatusRef.setValue("lost");
+                                mLostStudentPopups.remove(s.getKey());
+                                dialog.dismiss();
                             }
                         });
                         lostAlertBuilder.setNegativeButton("Not Lost", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 // User cancelled the dialog
+                                dialog.dismiss();
                             }
                         });
-                        lostAlertBuilder.create();
+
+                        AlertDialog lostAlert = lostAlertBuilder.create();
+                        lostAlert.show();
                     }
                 }
             }
 
-            if(!allDevices.contains(sensorTagDevices)) {
-                sensorTagDevices.clear();
-            }
+            sensorTagDevices.clear();
 
             mBLEAdapter.stopLeScan(mLeScanCallback);
-            scanHandler.postDelayed(startScan, 1000); // start scan after 10 ms
+            scanHandler.postDelayed(startScan, 5000); // start scan after 100 ms
         }
     };
 }

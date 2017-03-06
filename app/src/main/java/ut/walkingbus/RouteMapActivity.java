@@ -26,6 +26,8 @@ import java.util.Map;
 import ut.walkingbus.Models.DatabaseSchool;
 import ut.walkingbus.Models.Route;
 
+import static ut.walkingbus.R.id.map;
+
 public class RouteMapActivity extends FragmentActivity implements OnInfoWindowClickListener, OnMapReadyCallback {
     private static final String TAG = "RouteMapActivity";
 
@@ -45,7 +47,7 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
         setContentView(R.layout.activity_route_map);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+                .findFragmentById(map);
         mapFragment.getMapAsync(this);
 
     }
@@ -63,6 +65,7 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.setInfoWindowAdapter(new MarkerInfoAdapter(getLayoutInflater()));
         mMap.setOnInfoWindowClickListener(this);
 
         // get the student's school's routes

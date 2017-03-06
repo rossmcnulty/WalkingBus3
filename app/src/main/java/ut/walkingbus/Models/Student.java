@@ -12,7 +12,7 @@ public class Student {
     private String mKey;
     private String mBluetooth;
     private String mInfo;
-    private Map parents;
+    private Map<String, String> parents;
 
     public Student() {
     }
@@ -46,11 +46,11 @@ public class Student {
         mStatus = status;
     }
 
-    public void setParents(Map parents) {
+    public void setParents(Map<String, String> parents) {
         this.parents = parents;
     }
 
-    public Map getParents() {
+    public Map<String, String> getParents() {
         return parents;
     }
 
