@@ -99,6 +99,8 @@ public class RequestSchoolActivity extends BaseActivity {
                                         Map schoolUserValues = new HashMap<>();
                                         // TODO: remove ability to change username
                                         schoolUserValues.put(user.getUid(), user.getDisplayName());
+                                        Log.d(TAG, "UID: " + user.getUid());
+                                        Log.d(TAG, "DisplayName: " + user.getDisplayName());
                                         for(String schoolKey: (Set<String>) parentSchoolValues.keySet()) {
                                             FirebaseUtil.getSchoolUsersRef(schoolKey).updateChildren(schoolUserValues,
                                                     new DatabaseReference.CompletionListener() {

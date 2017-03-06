@@ -46,6 +46,7 @@ import java.util.Calendar;
 import de.hdodenhof.circleimageview.CircleImageView;
 import ut.walkingbus.Models.Route;
 import ut.walkingbus.Models.Student;
+import ut.walkingbus.Models.User;
 
 public class ChaperoneActivity extends BaseActivity implements
         NavigationView.OnNavigationItemSelectedListener,
@@ -94,9 +95,78 @@ public class ChaperoneActivity extends BaseActivity implements
 
         mContext = this;
 
+        mRouteKey = "";
+
         // TODO: don't hardcode these pls
-        // TODO: picked up field?
-        mRouteKey = "-KeWJO4qs-CcAyFf1pcC";
+        DatabaseReference chapRef = FirebaseUtil.getUserRef().child(FirebaseUtil.getCurrentUserId());
+        chapRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                User chap = dataSnapshot.getValue(User.class);
+                mRouteKey = chap.getRoutes();
+                DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey);
+                routeRef.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        mRoute = dataSnapshot.getValue(Route.class);
+                        Log.d(TAG, "Route name " + mRoute.getName());
+                        if(mRoute.getStudents() == null) {
+                            Log.d(TAG, "No students in route " + mRoute.getName());
+                            return;
+                        }
+                        if(mRoute.getStudents().get(mTimeslot) == null) {
+                            Log.d(TAG, "No students in timeslot " + mTimeslot);
+                            return;
+                        }
+                        for(String studentKey: mRoute.getStudents().get(mTimeslot).keySet()) {
+                            Log.d(TAG, "Student key " + studentKey);
+                            DatabaseReference studentRef = FirebaseUtil.getStudentsRef().child(studentKey);
+                            studentRef.addValueEventListener(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    Log.d(TAG, "Student reference " + dataSnapshot.getRef().toString());
+                                    Student s = dataSnapshot.getValue(Student.class);
+                                    s.setKey(dataSnapshot.getKey().toString());
+                                    boolean found = false;
+                                    for(int i = 0; i < mStudents.size(); i++) {
+                                        Student student = mStudents.get(i);
+                                        if(student.getKey().equals(s.getKey())) {
+                                            mStudents.set(i, s);
+                                            found = true;
+                                            break;
+                                        }
+                                    }
+                                    if(!found) {
+                                        Log.d(TAG, "Adding student " + s.getName());
+                                        Log.d(TAG, "Adding BT " + s.getBluetooth());
+                                        mStudents.add(s);
+                                        //mExpectedBluetooth.add(s.getBluetooth());
+                                    }
+                                    mStudentAdapter.notifyDataSetChanged();
+                                    Log.d(TAG, "student name: " + s.getName());
+                                }
+
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+
+                                }
+                            });
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError firebaseError) { }
+                });
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
+        // mRouteKey = "-KeWJO4qs-CcAyFf1pcC";
         mTimeslot = "mon_am";
 
         setTitle("Today's Bus");
@@ -227,59 +297,6 @@ public class ChaperoneActivity extends BaseActivity implements
         recycler.setLayoutManager(new LinearLayoutManager(this));
 
         // get route info
-        DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey);
-        routeRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                mRoute = dataSnapshot.getValue(Route.class);
-                Log.d(TAG, "Route name " + mRoute.getName());
-                if(mRoute.getStudents() == null) {
-                    Log.d(TAG, "No students in route " + mRoute.getName());
-                    return;
-                }
-                if(mRoute.getStudents().get(mTimeslot) == null) {
-                    Log.d(TAG, "No students in timeslot " + mTimeslot);
-                    return;
-                }
-                for(String studentKey: mRoute.getStudents().get(mTimeslot).keySet()) {
-                    Log.d(TAG, "Student key " + studentKey);
-                    DatabaseReference studentRef = FirebaseUtil.getStudentsRef().child(studentKey);
-                    studentRef.addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            Log.d(TAG, "Student reference " + dataSnapshot.getRef().toString());
-                            Student s = dataSnapshot.getValue(Student.class);
-                            s.setKey(dataSnapshot.getKey().toString());
-                            boolean found = false;
-                            for(int i = 0; i < mStudents.size(); i++) {
-                                Student student = mStudents.get(i);
-                                if(student.getKey().equals(s.getKey())) {
-                                    mStudents.set(i, s);
-                                    found = true;
-                                    break;
-                                }
-                            }
-                            if(!found) {
-                                Log.d(TAG, "Adding student " + s.getName());
-                                Log.d(TAG, "Adding BT " + s.getBluetooth());
-                                mStudents.add(s);
-                                //mExpectedBluetooth.add(s.getBluetooth());
-                            }
-                            mStudentAdapter.notifyDataSetChanged();
-                            Log.d(TAG, "student name: " + s.getName());
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-
-                        }
-                    });
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError firebaseError) { }
-        });
 
         mStudentAdapter = new ChaperoneStudentAdapter(mStudents, this);
 
