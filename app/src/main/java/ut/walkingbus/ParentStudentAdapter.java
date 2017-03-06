@@ -4,11 +4,9 @@ package ut.walkingbus;
  * Created by Ross on 2/17/2017.
  */
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.support.v4.app.ActivityCompat;
+import android.net.Uri;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -21,9 +19,15 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.List;
 
 import ut.walkingbus.Models.Student;
+import ut.walkingbus.Models.User;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
@@ -39,6 +43,7 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
         public ImageView picture;
         public ImageButton options;
         public View call, message;
+        public String phone;
 
 
         public MyViewHolder(View view) {
@@ -68,7 +73,7 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
     }
 
     @Override
-    public void onBindViewHolder(MyViewHolder holder, int position) {
+    public void onBindViewHolder(final MyViewHolder holder, int position) {
         final Student student = studentList.get(position);
         holder.name.setText(student.getName());
         holder.status.setText(student.getStatus());
@@ -102,19 +107,35 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
             }
         });
 
-        if(status.equals(mContext.getString(R.string.status_picked_up)) ||
-                status.equals(mContext.getString(R.string.status_lost))) {
+        if(status.toLowerCase().equals("picked up") ||
+                status.toLowerCase().equals("lost")) {
 
             holder.message.setVisibility(VISIBLE);
             holder.call.setVisibility(VISIBLE);
             holder.chaperone_name.setVisibility(VISIBLE);
 
+            String parentKey = student.getParents().keySet().iterator().next().toString();
+            Log.d(TAG, "User key " + parentKey);
+            DatabaseReference parentRef = FirebaseUtil.getUserRef().child(parentKey);
+            parentRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    User p = dataSnapshot.getValue(User.class);
+                    holder.chaperone_name.setText(p.getDisplayName());
+                    holder.phone = p.getPhone();
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
             holder.message.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Intent smsIntent = new Intent(Intent.ACTION_VIEW);
-                    smsIntent.setType("vnd.android-dir/mms-sms");
-                    //smsIntent.putExtra("sms_body","Body of Message");
+                    smsIntent.setData(Uri.parse("sms:" + holder.phone));
                     mContext.startActivity(smsIntent);
                 }
             });
@@ -122,12 +143,8 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
             holder.call.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent callIntent = new Intent(Intent.ACTION_CALL);
-                    callIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-                        return;
-                    }
-                    mContext.startActivity(callIntent);
+                    Intent dialIntent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + holder.phone));
+                    mContext.startActivity(dialIntent);
                 }
             });
         } else {

@@ -173,6 +173,7 @@ public class ChaperoneActivity extends BaseActivity implements
                         }
                     });
                     AlertDialog pickUpAlert = pickUpBuilder.create();
+                    pickUpAlert.setCanceledOnTouchOutside(false);
                     pickUpAlert.show();
                 } else if(mRoute.getStatus().toLowerCase().equals("picked up")) {
                     AlertDialog.Builder dropOffBuilder = new AlertDialog.Builder(mContext);
@@ -207,6 +208,7 @@ public class ChaperoneActivity extends BaseActivity implements
                         }
                     });
                     AlertDialog dropOffAlert = dropOffBuilder.create();
+                    dropOffAlert.setCanceledOnTouchOutside(false);
                     dropOffAlert.show();
                 } else {
                     Log.d(TAG, "Route status does not require chaperone interaction");
@@ -444,6 +446,7 @@ public class ChaperoneActivity extends BaseActivity implements
                     if(s.getStatus().toLowerCase().equals("waiting")) {
                         // don't worry about non-picked up students
                         Log.d(TAG, "Student " + s.getName() + " was never picked up");
+                        break;
                     }
 
                     for (BluetoothDevice d : sensorTagDevices) {
@@ -478,11 +481,13 @@ public class ChaperoneActivity extends BaseActivity implements
                         lostAlertBuilder.setNegativeButton("Not Lost", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 // User cancelled the dialog
+                                mLostStudentPopups.remove(s.getKey());
                                 dialog.dismiss();
                             }
                         });
 
                         AlertDialog lostAlert = lostAlertBuilder.create();
+                        lostAlert.setCanceledOnTouchOutside(false);
                         lostAlert.show();
                     }
                 }

@@ -175,12 +175,12 @@ public class AddStudentActivity extends BaseActivity {
                                         DatabaseReference parentStudentRef = FirebaseUtil.getUserStudentsRef(FirebaseUtil.getCurrentUserId());
                                         Map parentStudentUpdate = new HashMap();
                                         parentStudentUpdate.put(studentRef.getKey(), name);
-                                        Log.d(TAG, "Parent student key: " + databaseReference.getKey().toString());
+                                        Log.d(TAG, "User student key: " + databaseReference.getKey().toString());
                                         parentStudentRef.updateChildren(parentStudentUpdate,
                                                 new DatabaseReference.CompletionListener() {
                                                     @Override
                                                     public void onComplete(DatabaseError firebaseError, DatabaseReference databaseReference) {
-                                                        Log.d(TAG, "Parent student reference: " + databaseReference.toString());
+                                                        Log.d(TAG, "User student reference: " + databaseReference.toString());
                                                         if (firebaseError != null) {
                                                             Toast.makeText(AddStudentActivity.this,
                                                                     "Couldn't save parent student data: " + firebaseError.getMessage(),

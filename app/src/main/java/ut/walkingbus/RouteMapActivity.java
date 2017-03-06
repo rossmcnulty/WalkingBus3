@@ -39,6 +39,7 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
     private String mStudentName;
     private String mTimeslot;
     private String mSchoolKey;
+    private String mCurrentRouteKey;
     private Marker mSchoolMarker;
 
     @Override
@@ -71,6 +72,11 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
         // get the student's school's routes
         mStudentKey = getIntent().getStringExtra("STUDENT_KEY");
         mTimeslot = getIntent().getStringExtra("TIMESLOT");
+        if(getIntent().hasExtra("ROUTE_KEY")) {
+            mCurrentRouteKey = getIntent().getStringExtra("ROUTE_KEY");
+        } else {
+            mCurrentRouteKey = "";
+        }
 
         DatabaseReference studentRef = FirebaseUtil.getStudentsRef().child(mStudentKey);
 
@@ -127,8 +133,50 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
                                             route.setKey(dataSnapshot.getKey());
                                             mRoutes.add(route);
                                             String chapKey = route.getChaperone();
+
+                                            final Double lat = route.getLocation().get("lat");
+                                            final Double lng = route.getLocation().get("lng");
+                                            final LatLng routeStart = new LatLng(lat, lng);
+                                            final String routeTime = route.getTime();
+                                            final String routeName = route.getName();
+                                            final String routeKey = route.getKey();
+
+                                            DatabaseReference chaperoneRef = FirebaseUtil.getUserRef().child(chapKey).child("displayName");
+                                            chaperoneRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                                @Override
+                                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                                    String chapName = dataSnapshot.getValue().toString();
+                                                    Marker routeMarker;
+                                                    if(mCurrentRouteKey.equals(routeKey)) {
+                                                        routeMarker = mMap.addMarker(new MarkerOptions()
+                                                                .position(routeStart)
+                                                                .title(routeName)
+                                                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                                                                .snippet("Chaperone: " + chapName +
+                                                                        "\nTime: " + routeTime +
+                                                                        "\nClick to select this route"));
+                                                        routeMarker.setTag(routeKey);
+                                                    } else {
+                                                        routeMarker = mMap.addMarker(new MarkerOptions()
+                                                                .position(routeStart)
+                                                                .title(routeName)
+                                                                .snippet("Chaperone: " + chapName +
+                                                                        "\nTime: " + routeTime +
+                                                                        "\nClick to select this route"));
+                                                        routeMarker.setTag(routeKey);
+                                                    }
+                                                }
+
+                                                @Override
+                                                public void onCancelled(DatabaseError databaseError) {
+
+                                                }
+                                            });
+
+
                                             String chapName = "";
                                             // TODO: get chap name value programmatically
+                                            /*
                                             Double lat = route.getLocation().get("lat");
                                             Double lng = route.getLocation().get("lng");
                                             LatLng routeStart = new LatLng(lat, lng);
@@ -138,6 +186,7 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
                                                     .snippet("Chaperone: " + chapName +
                                                             "\nClick to select this route"));
                                             routeMarker.setTag(route.getKey());
+                                            */
                                         }
 
                                         @Override
@@ -202,6 +251,11 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
                                         Toast.makeText(RouteMapActivity.this,
                                                 "Couldn't save student route data: " + databaseError.getMessage(),
                                                 Toast.LENGTH_LONG).show();
+                                    } else {
+                                        Toast.makeText(RouteMapActivity.this,
+                                                "Student route data set",
+                                                Toast.LENGTH_LONG).show();
+                                        RouteMapActivity.super.onBackPressed();
                                     }
                                 }
                             });

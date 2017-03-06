@@ -53,6 +53,8 @@ public class RoutesActivity extends BaseActivity {
     Button friAmButton;
     Button friPmButton;
 
+    private Map<String, String> mCurrentRouteKeys;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,6 +82,9 @@ public class RoutesActivity extends BaseActivity {
                 Intent routeMapIntent = new Intent(v.getContext(), RouteMapActivity.class);
                 routeMapIntent.putExtra("TIMESLOT", "MON_AM");
                 routeMapIntent.putExtra("STUDENT_KEY", studentKey);
+                if(mCurrentRouteKeys.containsKey("MON_AM")) {
+                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("MON_AM"));
+                }
                 startActivity(routeMapIntent);
             }
         });
@@ -91,6 +96,9 @@ public class RoutesActivity extends BaseActivity {
                 Intent routeMapIntent = new Intent(v.getContext(), RouteMapActivity.class);
                 routeMapIntent.putExtra("TIMESLOT", "MON_PM");
                 routeMapIntent.putExtra("STUDENT_KEY", studentKey);
+                if(mCurrentRouteKeys.containsKey("MON_PM")) {
+                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("MON_PM"));
+                }
                 startActivity(routeMapIntent);
             }
         });
@@ -102,6 +110,9 @@ public class RoutesActivity extends BaseActivity {
                 Intent routeMapIntent = new Intent(v.getContext(), RouteMapActivity.class);
                 routeMapIntent.putExtra("TIMESLOT", "TUES_AM");
                 routeMapIntent.putExtra("STUDENT_KEY", studentKey);
+                if(mCurrentRouteKeys.containsKey("TUES_AM")) {
+                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("TUES_AM"));
+                }
                 startActivity(routeMapIntent);
             }
         });
@@ -113,6 +124,9 @@ public class RoutesActivity extends BaseActivity {
                 Intent routeMapIntent = new Intent(v.getContext(), RouteMapActivity.class);
                 routeMapIntent.putExtra("TIMESLOT", "TUES_PM");
                 routeMapIntent.putExtra("STUDENT_KEY", studentKey);
+                if(mCurrentRouteKeys.containsKey("TUES_PM")) {
+                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("TUES_PM"));
+                }
                 startActivity(routeMapIntent);
             }
         });
@@ -124,6 +138,9 @@ public class RoutesActivity extends BaseActivity {
                 Intent routeMapIntent = new Intent(v.getContext(), RouteMapActivity.class);
                 routeMapIntent.putExtra("TIMESLOT", "WED_AM");
                 routeMapIntent.putExtra("STUDENT_KEY", studentKey);
+                if(mCurrentRouteKeys.containsKey("WED_AM")) {
+                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("WED_AM"));
+                }
                 startActivity(routeMapIntent);
             }
         });
@@ -135,6 +152,9 @@ public class RoutesActivity extends BaseActivity {
                 Intent routeMapIntent = new Intent(v.getContext(), RouteMapActivity.class);
                 routeMapIntent.putExtra("TIMESLOT", "WED_PM");
                 routeMapIntent.putExtra("STUDENT_KEY", studentKey);
+                if(mCurrentRouteKeys.containsKey("WED_PM")) {
+                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("WED_PM"));
+                }
                 startActivity(routeMapIntent);
             }
         });
@@ -146,6 +166,9 @@ public class RoutesActivity extends BaseActivity {
                 Intent routeMapIntent = new Intent(v.getContext(), RouteMapActivity.class);
                 routeMapIntent.putExtra("TIMESLOT", "THURS_AM");
                 routeMapIntent.putExtra("STUDENT_KEY", studentKey);
+                if(mCurrentRouteKeys.containsKey("THURS_AM")) {
+                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("THURS_AM"));
+                }
                 startActivity(routeMapIntent);
             }
         });
@@ -157,6 +180,9 @@ public class RoutesActivity extends BaseActivity {
                 Intent routeMapIntent = new Intent(v.getContext(), RouteMapActivity.class);
                 routeMapIntent.putExtra("TIMESLOT", "THURS_PM");
                 routeMapIntent.putExtra("STUDENT_KEY", studentKey);
+                if(mCurrentRouteKeys.containsKey("THURS_PM")) {
+                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("THURS_PM"));
+                }
                 startActivity(routeMapIntent);
             }
         });
@@ -168,6 +194,9 @@ public class RoutesActivity extends BaseActivity {
                 Intent routeMapIntent = new Intent(v.getContext(), RouteMapActivity.class);
                 routeMapIntent.putExtra("TIMESLOT", "FRI_AM");
                 routeMapIntent.putExtra("STUDENT_KEY", studentKey);
+                if(mCurrentRouteKeys.containsKey("FRI_AM")) {
+                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("FRI_AM"));
+                }
                 startActivity(routeMapIntent);
             }
         });
@@ -179,6 +208,9 @@ public class RoutesActivity extends BaseActivity {
                 Intent routeMapIntent = new Intent(v.getContext(), RouteMapActivity.class);
                 routeMapIntent.putExtra("TIMESLOT", "FRI_PM");
                 routeMapIntent.putExtra("STUDENT_KEY", studentKey);
+                if(mCurrentRouteKeys.containsKey("FRI_PM")) {
+                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("FRI_PM"));
+                }
                 startActivity(routeMapIntent);
             }
         });
@@ -186,6 +218,7 @@ public class RoutesActivity extends BaseActivity {
 
         mRoutesByKey = new HashMap<String, Route>();
         mRouteKeysByTimeslot = new HashMap<String, String>();
+        mCurrentRouteKeys = new HashMap<String, String>();
 
         setTitle("View Routes");
 
@@ -209,6 +242,7 @@ public class RoutesActivity extends BaseActivity {
                             mRoutesByKey.put(route.getKey(), route);
 
                             Log.d(TAG, "Timeslot post " + timeslot);
+                            mCurrentRouteKeys.put(timeslot.toUpperCase(), route.getKey());
                             switch(timeslot.toUpperCase()) {
                                 case "MON_AM":
                                     monAmText.setText(route.getName());
