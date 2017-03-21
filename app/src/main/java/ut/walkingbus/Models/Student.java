@@ -12,6 +12,7 @@ public class Student {
     private String mKey;
     private String mBluetooth;
     private String mInfo;
+    private String mPhotoUrl;
     private Map<String, Map<String, String>> mParents;
     private String mSchool;
     private Map<String, String> mRoutes;
@@ -27,6 +28,9 @@ public class Student {
         mInfo = info;
     }
 
+    public void setPhotoUrl(String photoUrl) {
+        mPhotoUrl = photoUrl;
+    }
 
     public void setName(String name) {
         mName = name;
@@ -58,6 +62,10 @@ public class Student {
 
     public void setParents(Map<String, Map<String, String>> parents) {
         mParents = parents;
+    }
+
+    public String getPhotoUrl() {
+        return mPhotoUrl;
     }
 
     public Map<String, Map<String, String>> getParents() {

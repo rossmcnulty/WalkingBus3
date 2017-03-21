@@ -20,15 +20,21 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.signature.StringSignature;
+import com.firebase.ui.storage.images.FirebaseImageLoader;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import ut.walkingbus.Models.Student;
 import ut.walkingbus.Models.User;
@@ -41,6 +47,7 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
 
     private List<Student> studentList;
     private Context mContext;
+    private FirebaseStorage mStorage;
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
         public TextView name, status, chaperone_name;
@@ -72,7 +79,7 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.parent_student, parent, false);
-
+        mStorage = FirebaseStorage.getInstance();
         return new MyViewHolder(itemView);
     }
 
@@ -177,6 +184,23 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
                 popup.show();
             }
         });
+
+        if(student.getPhotoUrl() != null) {
+            Log.d(TAG, "Student has Photo URL");
+
+            StorageReference gsReference = mStorage.getReferenceFromUrl(student.getPhotoUrl());
+
+            // ImageView in your Activity
+            ImageView imageView = holder.picture;
+            imageView.setBackgroundColor(0);
+
+            // Load the image using Glide
+            Glide.with(mContext)
+                    .using(new FirebaseImageLoader())
+                    .load(gsReference)
+                    .signature(new StringSignature(UUID.randomUUID().toString()))
+                    .into(imageView);
+        }
 
         if(status.toLowerCase().equals("picked up") ||
                 status.toLowerCase().equals("lost")) {

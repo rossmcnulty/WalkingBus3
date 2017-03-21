@@ -102,6 +102,7 @@ public class ParentActivity extends BaseActivity implements
                             }
                             Student s = dataSnapshot.getValue(Student.class);
                             s.setKey(dataSnapshot.getKey());
+                            Log.d(TAG, "Student photoURL: " + s.getPhotoUrl());
                             boolean found = false;
                             for(int i = 0; i < mStudents.size(); i++) {
                                 Student student = mStudents.get(i);
