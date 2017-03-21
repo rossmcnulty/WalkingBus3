@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/edit"
-        android:title="Edit Info"/>
     <item android:id="@+id/routes"
         android:title="View Routes"/>
+    <item android:id="@+id/edit"
+        android:title="Edit Info"/>
+    <item android:id="@+id/delete"
+        android:title="Delete Student"/>
 </menu>

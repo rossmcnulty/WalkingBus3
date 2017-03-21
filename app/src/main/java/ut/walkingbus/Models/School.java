@@ -1,34 +1,54 @@
 package ut.walkingbus.Models;
 
 /**
- * Created by Ross on 2/23/2017.
+ * Created by Ross on 3/1/2017.
  */
 
 public class School {
-    String name;
-    String key;
-    boolean selected;
 
-    public School(String name, String key, boolean selected) {
+    private Double lat;
+    private Double lng;
+    private String key;
+    private String name;
+
+    public School() {}
+
+    public School(Double lat, Double lng, String name) {
+        this.lat = lat;
+        this.lng = lng;
         this.name = name;
-        this.key = key;
-        this.selected = selected;
     }
 
     public String getName() {
         return name;
     }
 
+    public Double getLat() {
+        return lat;
+    }
+
+    public Double getLng() {
+        return lng;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
     public String getKey() {
         return key;
     }
 
-    public boolean isSelected() {
-        return selected;
+    public void setLng(Double lng) {
+        this.lng = lng;
     }
 
-    public void setSelected(boolean selected) {
-        this.selected = selected;
+    public void setLat(Double lat) {
+        this.lat = lat;
     }
 
 }

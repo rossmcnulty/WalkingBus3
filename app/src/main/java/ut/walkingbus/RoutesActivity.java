@@ -16,7 +16,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.HashMap;
 import java.util.Map;
 
-import ut.walkingbus.Models.DatabaseSchool;
+import ut.walkingbus.Models.School;
 import ut.walkingbus.Models.Route;
 
 /**
@@ -28,7 +28,7 @@ public class RoutesActivity extends BaseActivity {
 
     private static int RESULT_LOAD_IMAGE = 1;
     private String name;
-    private DatabaseSchool mSchool;
+    private School mSchool;
     private Map<String, Route> mRoutesByKey;
     private Map<String, String> mRouteKeysByTimeslot;
     TextView monAmText;

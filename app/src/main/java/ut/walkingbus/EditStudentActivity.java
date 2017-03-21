@@ -51,6 +51,8 @@ public class EditStudentActivity extends BaseActivity {
     private ArrayList<School> mSchoolArray;
     private ArrayAdapter<School> mSchoolAdapter;
 
+    private Student mStudent;
+
     private static final int MY_PERMISSION_RESPONSE = 2;
     private ArrayList<BluetoothDevice> sensorTagDevices = new ArrayList<BluetoothDevice>();
     private ArrayList<BluetoothDevice> allDevices = new ArrayList<BluetoothDevice>();
@@ -99,7 +101,10 @@ public class EditStudentActivity extends BaseActivity {
                 for (DataSnapshot schoolSnapshot: dataSnapshot.getChildren()) {
                     String key = schoolSnapshot.getKey();
                     String name = schoolSnapshot.getValue().toString();
-                    mSchoolAdapter.add(new School(name, key, false));
+                    School s = new School();
+                    s.setName(name);
+                    s.setKey(key);
+                    mSchoolAdapter.add(s);
                     Log.d(TAG, "School name: " + name);
                 }
                 mSchoolAdapter.notifyDataSetChanged();
@@ -115,11 +120,11 @@ public class EditStudentActivity extends BaseActivity {
         studentRef.child(studentKey).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Student s = dataSnapshot.getValue(Student.class);
-                ((TextView) findViewById(R.id.add_name)).setText(s.getName());
-                ((TextView) findViewById(R.id.add_bluetooth)).setText(s.getBluetooth());
-                ((TextView) findViewById(R.id.add_info)).setText(s.getInfo());
-                ((TextView) findViewById(R.id.add_name)).setText(s.getName());
+                mStudent = dataSnapshot.getValue(Student.class);
+                mStudent.setKey(dataSnapshot.getKey());
+                ((TextView) findViewById(R.id.add_name)).setText(mStudent.getName());
+                ((TextView) findViewById(R.id.add_bluetooth)).setText(mStudent.getBluetooth());
+                ((TextView) findViewById(R.id.add_info)).setText(mStudent.getInfo());
                 // TODO: make spinner position correct to right school
                 // ((Spinner) findViewById(R.id.add_school)).setSelection();
             }
@@ -158,44 +163,102 @@ public class EditStudentActivity extends BaseActivity {
 
             @Override
             public void onClick(View arg0) {
-                final String name = ((TextView) findViewById(R.id.add_name)).getText().toString();
-                String info = ((TextView) findViewById(R.id.add_info)).getText().toString();
-                String bluetooth = ((TextView) findViewById(R.id.add_bluetooth)).getText().toString();
-                mSchool = (School)((Spinner) findViewById(R.id.add_school)).getSelectedItem();
-                String schoolKey = mSchool.getKey();
+
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 if (user == null) {
                     Toast.makeText(EditStudentActivity.this, R.string.user_logged_out_error,
                             Toast.LENGTH_SHORT).show();
                 } else {
-                    final DatabaseReference studentRef = FirebaseUtil.getStudentsRef().child(studentKey);
-                    Map studentParentsValues = new HashMap();
-                    studentParentsValues.put(FirebaseUtil.getCurrentUserId(), FirebaseUtil.getCurrentUserId());
 
-                    Map studentValues = new HashMap();
-                    studentValues.put("bluetooth", bluetooth);
-                    studentValues.put("name", name);
-                    studentValues.put("info", info);
-                    studentValues.put("status", "waiting");
-                    studentValues.put("parents", studentParentsValues);
-                    studentValues.put("school", schoolKey);
+                    final DatabaseReference studentRouteRefs = FirebaseUtil.getStudentRoutesRef(mStudent.getKey());
+                    studentRouteRefs.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            ArrayList<DatabaseReference> routeRefs = new ArrayList<DatabaseReference>();
 
-                    Log.d(TAG, "UID: " + user.getUid());
-                    Log.d(TAG, "School: " + schoolKey);
+                            if(dataSnapshot.hasChild("mon_am")) {
+                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("mon_am").getValue().toString()));
+                            }
+                            if(dataSnapshot.hasChild("mon_pm")) {
+                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("mon_pm").getValue().toString()));
+                            }
+                            if(dataSnapshot.hasChild("tues_am")) {
+                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("tues_am").getValue().toString()));
+                            }
+                            if(dataSnapshot.hasChild("tues_pm")) {
+                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("tues_pm").getValue().toString()));
+                            }
+                            if(dataSnapshot.hasChild("wed_am")) {
+                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("wed_am").getValue().toString()));
+                            }
+                            if(dataSnapshot.hasChild("wed_pm")) {
+                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("wed_pm").getValue().toString()));
+                            }
+                            if(dataSnapshot.hasChild("thurs_am")) {
+                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("thurs_am").getValue().toString()));
+                            }
+                            if(dataSnapshot.hasChild("thurs_pm")) {
+                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("thurs_pm").getValue().toString()));
+                            }
+                            if(dataSnapshot.hasChild("fri_am")) {
+                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("fri_am").getValue().toString()));
+                            }
+                            if(dataSnapshot.hasChild("fri_pm")) {
+                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("fri_pm").getValue().toString()));
+                            }
 
-                    studentRef.updateChildren(
-                            studentValues,
-                            new DatabaseReference.CompletionListener() {
+                            String name = ((TextView) findViewById(R.id.add_name)).getText().toString();
+                            String info = ((TextView) findViewById(R.id.add_info)).getText().toString();
+                            String bluetooth = ((TextView) findViewById(R.id.add_bluetooth)).getText().toString();
+                            mSchool = (School)((Spinner) findViewById(R.id.add_school)).getSelectedItem();
+
+                            String schoolKey = mSchool.getKey();
+                            String userKey = FirebaseUtil.getCurrentUserId();
+
+                            Map studentValues = new HashMap();
+                            studentValues.put("bluetooth", bluetooth);
+                            studentValues.put("name", name);
+                            studentValues.put("info", info);
+                            studentValues.put("school", schoolKey);
+
+                            Map propagatedStudentData = new HashMap();
+                            if(!mStudent.getSchool().equals(schoolKey)) {
+                                // Student changed schools
+                                Log.d(TAG, "School changed, deleting earlier school and route data");
+                                studentValues.put("status", "no route");
+                                propagatedStudentData.put("schools/" + mStudent.getSchool() + "/students/" + studentKey, null);
+                                for(DatabaseReference routeRef: routeRefs) {
+                                    propagatedStudentData.put(routeRef.toString() + "/" + mStudent.getKey(), null);
+                                }
+                                propagatedStudentData.put("schools/" + schoolKey + "/students/" + studentKey, name);
+
+                            }
+                            // TODO: propagate child name changes where relevant
+                            propagatedStudentData.put("students/" + mStudent.getKey() + "/bluetooth", bluetooth);
+                            propagatedStudentData.put("students/" + mStudent.getKey() + "/name", name);
+                            propagatedStudentData.put("students/" + mStudent.getKey() + "/info", info);
+                            propagatedStudentData.put("students/" + mStudent.getKey() + "/school", schoolKey);
+
+                            Log.d(TAG, "UID: " + userKey);
+                            Log.d(TAG, "School: " + schoolKey);
+
+                            FirebaseUtil.getBaseRef().updateChildren(propagatedStudentData, new DatabaseReference.CompletionListener() {
                                 @Override
-                                public void onComplete(DatabaseError firebaseError, DatabaseReference databaseReference) {
-                                    Log.d(TAG, "Student reference: " + databaseReference.toString());
-                                    if (firebaseError != null) {
+                                public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                                    if (databaseError != null) {
                                         Toast.makeText(EditStudentActivity.this,
-                                                "Couldn't save student data: " + firebaseError.getMessage(),
+                                                "Couldn't edit student data: " + databaseError.getMessage(),
                                                 Toast.LENGTH_LONG).show();
                                     }
                                 }
                             });
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
                 }
                 EditStudentActivity.super.onBackPressed();
             }

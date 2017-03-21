@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import ut.walkingbus.Models.DatabaseSchool;
+import ut.walkingbus.Models.School;
 import ut.walkingbus.Models.Route;
 
 import static ut.walkingbus.R.id.map;
@@ -34,7 +34,7 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
     private GoogleMap mMap;
     private ArrayList<Route> mRoutes;
     private ArrayList<String> mRouteKeys;
-    private DatabaseSchool mSchool;
+    private School mSchool;
     private String mStudentKey;
     private String mStudentName;
     private String mTimeslot;
@@ -105,7 +105,7 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
                 schoolRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        mSchool = dataSnapshot.getValue(DatabaseSchool.class);
+                        mSchool = dataSnapshot.getValue(School.class);
                         mSchool.setKey(dataSnapshot.getKey());
 
                         LatLng schoolLocation = new LatLng(mSchool.getLat(), mSchool.getLng());

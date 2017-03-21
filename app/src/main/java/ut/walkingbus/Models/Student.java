@@ -12,7 +12,9 @@ public class Student {
     private String mKey;
     private String mBluetooth;
     private String mInfo;
-    private Map<String, String> parents;
+    private Map<String, Map<String, String>> mParents;
+    private String mSchool;
+    private Map<String, String> mRoutes;
 
     public Student() {
     }
@@ -38,6 +40,10 @@ public class Student {
         mInfo = info;
     }
 
+    public void setSchool(String school) {
+        mSchool = school;
+    }
+
     public void setBluetooth(String bluetooth) {
         mBluetooth = bluetooth;
     }
@@ -46,16 +52,28 @@ public class Student {
         mStatus = status;
     }
 
-    public void setParents(Map<String, String> parents) {
-        this.parents = parents;
+    public void setRoutes(Map<String, String> routes) {
+        mRoutes = routes;
     }
 
-    public Map<String, String> getParents() {
-        return parents;
+    public void setParents(Map<String, Map<String, String>> parents) {
+        mParents = parents;
+    }
+
+    public Map<String, Map<String, String>> getParents() {
+        return mParents;
     }
 
     public String getName() {
         return mName;
+    }
+
+    public String getSchool() {
+        return mSchool;
+    }
+
+    public Map<String, String> getRoutes() {
+        return mRoutes;
     }
 
     public String getStatus() {

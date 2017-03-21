@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ut.walkingbus.Models.School;
+import ut.walkingbus.Models.User;
 
 public class AddStudentActivity extends BaseActivity {
     private static final String TAG = "AddStudentActivity";
@@ -51,7 +52,6 @@ public class AddStudentActivity extends BaseActivity {
 
     private static final int MY_PERMISSION_RESPONSE = 2;
     private ArrayList<BluetoothDevice> sensorTagDevices = new ArrayList<BluetoothDevice>();
-    private ArrayList<BluetoothDevice> allDevices = new ArrayList<BluetoothDevice>();
 
     private BluetoothAdapter mBLEAdapter;
     private BluetoothManager manager;
@@ -96,7 +96,10 @@ public class AddStudentActivity extends BaseActivity {
                 for (DataSnapshot schoolSnapshot: dataSnapshot.getChildren()) {
                     String key = schoolSnapshot.getKey();
                     String name = schoolSnapshot.getValue().toString();
-                    mSchoolAdapter.add(new School(name, key, false));
+                    School s = new School();
+                    s.setName(name);
+                    s.setKey(key);
+                    mSchoolAdapter.add(s);
                     Log.d(TAG, "School name: " + name);
                 }
                 mSchoolAdapter.notifyDataSetChanged();
@@ -136,78 +139,66 @@ public class AddStudentActivity extends BaseActivity {
 
             @Override
             public void onClick(View arg0) {
-                final String name = ((TextView) findViewById(R.id.add_name)).getText().toString();
-                String info = ((TextView) findViewById(R.id.add_info)).getText().toString();
-                String bluetooth = ((TextView) findViewById(R.id.add_bluetooth)).getText().toString();
-                mSchool = (School)((Spinner) findViewById(R.id.add_school)).getSelectedItem();
-                String schoolKey = mSchool.getKey();
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 if (user == null) {
                     Toast.makeText(AddStudentActivity.this, R.string.user_logged_out_error,
                             Toast.LENGTH_SHORT).show();
                 } else {
                     final DatabaseReference studentRef = FirebaseUtil.getStudentsRef().push();
-                    Map studentParentsValues = new HashMap();
-                    studentParentsValues.put(FirebaseUtil.getCurrentUserId(), FirebaseUtil.getCurrentUserId());
+                    final String studentKey = studentRef.getKey();
+                    final String userKey = FirebaseUtil.getCurrentUserId();
 
-                    Map studentValues = new HashMap();
-                    studentValues.put("bluetooth", bluetooth);
-                    studentValues.put("name", name);
-                    studentValues.put("info", info);
-                    studentValues.put("status", "waiting");
-                    studentValues.put("parents", studentParentsValues);
-                    studentValues.put("school", schoolKey);
+                    DatabaseReference userRef = FirebaseUtil.getUserRef().child(FirebaseUtil.getCurrentUserId());
+                    userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            User user = dataSnapshot.getValue(User.class);
+                            Map userValues = new HashMap();
+                            userValues.put("displayName", user.getDisplayName());
+                            userValues.put("phone", user.getPhone());
+                            Map studentParentsValues = new HashMap();
+                            studentParentsValues.put(FirebaseUtil.getCurrentUserId(), userValues);
 
-                    Log.d(TAG, "UID: " + user.getUid());
-                    Log.d(TAG, "School: " + schoolKey);
+                            final String name = ((TextView) findViewById(R.id.add_name)).getText().toString();
+                            String info = ((TextView) findViewById(R.id.add_info)).getText().toString();
+                            String bluetooth = ((TextView) findViewById(R.id.add_bluetooth)).getText().toString();
+                            mSchool = (School)((Spinner) findViewById(R.id.add_school)).getSelectedItem();
+                            String schoolKey = mSchool.getKey();
 
-                    studentRef.updateChildren(
-                            studentValues,
-                            new DatabaseReference.CompletionListener() {
+                            Map studentValues = new HashMap();
+                            studentValues.put("bluetooth", bluetooth);
+                            studentValues.put("name", name);
+                            studentValues.put("info", info);
+                            studentValues.put("status", "no route");
+                            studentValues.put("parents", studentParentsValues);
+                            studentValues.put("school", schoolKey);
+
+                            Map propagatedStudentData = new HashMap();
+                            propagatedStudentData.put("students/" + studentKey, studentValues);
+                            propagatedStudentData.put("users/" + userKey + "/students/" + studentKey, name);
+                            propagatedStudentData.put("schools/" + schoolKey + "/students/" + studentKey, name);
+
+                            Log.d(TAG, "UID: " + userKey);
+                            Log.d(TAG, "School: " + schoolKey);
+
+                            FirebaseUtil.getBaseRef().updateChildren(propagatedStudentData, new DatabaseReference.CompletionListener() {
                                 @Override
-                                public void onComplete(DatabaseError firebaseError, DatabaseReference databaseReference) {
-                                    Log.d(TAG, "Student reference: " + databaseReference.toString());
-                                    if (firebaseError != null) {
+                                public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                                    if (databaseError != null) {
                                         Toast.makeText(AddStudentActivity.this,
-                                                "Couldn't save student data: " + firebaseError.getMessage(),
+                                                "Couldn't save student data: " + databaseError.getMessage(),
                                                 Toast.LENGTH_LONG).show();
-                                    } else {
-                                        DatabaseReference parentStudentRef = FirebaseUtil.getUserStudentsRef(FirebaseUtil.getCurrentUserId());
-                                        Map parentStudentUpdate = new HashMap();
-                                        parentStudentUpdate.put(studentRef.getKey(), name);
-                                        Log.d(TAG, "User student key: " + databaseReference.getKey().toString());
-                                        parentStudentRef.updateChildren(parentStudentUpdate,
-                                                new DatabaseReference.CompletionListener() {
-                                                    @Override
-                                                    public void onComplete(DatabaseError firebaseError, DatabaseReference databaseReference) {
-                                                        Log.d(TAG, "User student reference: " + databaseReference.toString());
-                                                        if (firebaseError != null) {
-                                                            Toast.makeText(AddStudentActivity.this,
-                                                                    "Couldn't save parent student data: " + firebaseError.getMessage(),
-                                                                    Toast.LENGTH_LONG).show();
-                                                        } else {
-                                                            DatabaseReference schoolRef = FirebaseUtil.getSchoolStudentsRef(mSchool.getKey());
-                                                            Map schoolStudentsUpdate = new HashMap();
-                                                            schoolStudentsUpdate.put(studentRef.getKey(), name);
-                                                            schoolRef.updateChildren(schoolStudentsUpdate,
-                                                                    new DatabaseReference.CompletionListener() {
-                                                                        @Override
-                                                                        public void onComplete(DatabaseError firebaseError, DatabaseReference databaseReference) {
-                                                                            Log.d(TAG, "School student reference: " + databaseReference.toString());
-                                                                            if (firebaseError != null) {
-                                                                                Toast.makeText(AddStudentActivity.this,
-                                                                                        "Couldn't save school student data: " + firebaseError.getMessage(),
-                                                                                        Toast.LENGTH_LONG).show();
-                                                                            }
-                                                                        }
-                                                                    }
-                                                            );
-                                                        }
-                                                    }
-                                                });
                                     }
                                 }
                             });
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+
                 }
                 AddStudentActivity.super.onBackPressed();
             }
@@ -257,10 +248,9 @@ public class AddStudentActivity extends BaseActivity {
     private Runnable startScan = new Runnable() {
         @Override
         public void run() {
-            showProgressDialog("Scanning");
-            allDevices.clear();
-            scanHandler.postDelayed(stopScan, 5000); // invoke stop scan after 5000 ms
-            mBLEAdapter.startLeScan(mLeScanCallback);
+        showProgressDialog("Scanning");
+        scanHandler.postDelayed(stopScan, 5000); // invoke stop scan after 5000 ms
+        mBLEAdapter.startLeScan(mLeScanCallback);
         }
     };
     public static String ByteArrayToString(byte[] ba)
@@ -277,9 +267,6 @@ public class AddStudentActivity extends BaseActivity {
         @SuppressLint("NewApi")
         public void onLeScan(final BluetoothDevice device, int rssi,
                              byte[] scanRecord) {
-            if(!allDevices.contains(device)){
-                allDevices.add(device);
-            }
             String address = device.getAddress();
             String name = device.getName();
             byte[] data = scanRecord;
@@ -317,9 +304,7 @@ public class AddStudentActivity extends BaseActivity {
                         Toast.LENGTH_LONG).show();
             }
 
-            if(!allDevices.contains(sensorTagDevices)) {
-                sensorTagDevices.clear();
-            }
+            sensorTagDevices.clear();
 
             mBLEAdapter.stopLeScan(mLeScanCallback);
             dismissProgressDialog();

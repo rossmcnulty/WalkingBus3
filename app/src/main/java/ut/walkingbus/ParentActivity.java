@@ -97,12 +97,15 @@ public class ParentActivity extends BaseActivity implements
                     studentRef.addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
+                            if(!dataSnapshot.exists()) {
+                                return;
+                            }
                             Student s = dataSnapshot.getValue(Student.class);
                             s.setKey(dataSnapshot.getKey());
                             boolean found = false;
                             for(int i = 0; i < mStudents.size(); i++) {
                                 Student student = mStudents.get(i);
-                                if(student.getName().equals(s.getName())) {
+                                if(student.getKey().equals(s.getKey())) {
                                     mStudents.set(i, s);
                                     found = true;
                                     break;

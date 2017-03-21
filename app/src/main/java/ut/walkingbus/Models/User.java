@@ -12,7 +12,7 @@ public class User {
     private String fcm;
     private String phone;
     private String photoUrl;
-    private String routes;
+    private Map<String, String> routes;
     private Map<String, String> schools_parent;
     private Map<String, String> students;
 
@@ -59,11 +59,11 @@ public class User {
         this.photoUrl = photoUrl;
     }
 
-    public String getRoutes() {
+    public Map<String, String> getRoutes() {
         return routes;
     }
 
-    public void setRoutes(String routes) {
+    public void setRoutes(Map<String, String> routes) {
         this.routes = routes;
     }
 

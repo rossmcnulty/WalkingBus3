@@ -18,13 +18,17 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import ut.walkingbus.Models.Student;
 import ut.walkingbus.Models.User;
@@ -97,6 +101,73 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
                                 Intent viewRoutesIntent = new Intent(mContext, RoutesActivity.class);
                                 viewRoutesIntent.putExtra("STUDENT_KEY", student.getKey());
                                 mContext.startActivity(viewRoutesIntent);
+                                return true;
+                            case R.id.delete:
+                                final DatabaseReference studentRouteRefs = FirebaseUtil.getStudentRoutesRef(student.getKey());
+                                studentRouteRefs.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        ArrayList<DatabaseReference> routeRefs = new ArrayList<DatabaseReference>();
+
+                                        if(dataSnapshot.hasChild("mon_am")) {
+                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("mon_am").getValue().toString()));
+                                        }
+                                        if(dataSnapshot.hasChild("mon_pm")) {
+                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("mon_pm").getValue().toString()));
+                                        }
+                                        if(dataSnapshot.hasChild("tues_am")) {
+                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("tues_am").getValue().toString()));
+                                        }
+                                        if(dataSnapshot.hasChild("tues_pm")) {
+                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("tues_pm").getValue().toString()));
+                                        }
+                                        if(dataSnapshot.hasChild("wed_am")) {
+                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("wed_am").getValue().toString()));
+                                        }
+                                        if(dataSnapshot.hasChild("wed_pm")) {
+                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("wed_pm").getValue().toString()));
+                                        }
+                                        if(dataSnapshot.hasChild("thurs_am")) {
+                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("thurs_am").getValue().toString()));
+                                        }
+                                        if(dataSnapshot.hasChild("thurs_pm")) {
+                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("thurs_pm").getValue().toString()));
+                                        }
+                                        if(dataSnapshot.hasChild("fri_am")) {
+                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("fri_am").getValue().toString()));
+                                        }
+                                        if(dataSnapshot.hasChild("fri_pm")) {
+                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("fri_pm").getValue().toString()));
+                                        }
+
+                                        Map propagatedStudentValues = new HashMap<>();
+                                        propagatedStudentValues.put("students/" + student.getKey(), null);
+                                        propagatedStudentValues.put("users/" + student.getParents().keySet().toArray()[0] + "/students/" + student.getKey(), null);
+                                        propagatedStudentValues.put("schools/" + student.getSchool() + "/students/" + student.getKey(), null);
+                                        for(DatabaseReference routeRef: routeRefs) {
+                                            Log.d(TAG, "Route ref: " + routeRef.toString());
+                                            propagatedStudentValues.put(routeRef.toString() + "/" + student.getKey(), null);
+                                        }
+                                        FirebaseUtil.getBaseRef().updateChildren(propagatedStudentValues, new DatabaseReference.CompletionListener() {
+                                            @Override
+                                            public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                                                if (databaseError != null) {
+                                                    Toast.makeText(mContext,
+                                                            "Couldn't delete student data: " + databaseError.getMessage(),
+                                                            Toast.LENGTH_LONG).show();
+                                                } else {
+                                                    studentList.remove(student);
+                                                    notifyDataSetChanged();
+                                                }
+                                            }
+                                        });
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+
+                                    }
+                                });
                                 return true;
                             default:
                                 return false;

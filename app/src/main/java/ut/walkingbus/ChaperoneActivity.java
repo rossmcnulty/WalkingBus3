@@ -2,6 +2,7 @@ package ut.walkingbus;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -87,6 +88,13 @@ public class ChaperoneActivity extends BaseActivity implements
     private static final int RC_SIGN_IN = 103;
 
     @Override
+    public void onResume() {
+        super.onResume();  // Always call the superclass method first
+
+        mContext = this;
+    }
+
+    @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chaperone);
@@ -103,7 +111,8 @@ public class ChaperoneActivity extends BaseActivity implements
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 User chap = dataSnapshot.getValue(User.class);
-                mRouteKey = chap.getRoutes();
+                // TODO: Select route based on time
+                mRouteKey = chap.getRoutes().keySet().toArray()[0].toString();
                 DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey);
                 routeRef.addValueEventListener(new ValueEventListener() {
                     @Override
@@ -244,7 +253,10 @@ public class ChaperoneActivity extends BaseActivity implements
                     });
                     AlertDialog pickUpAlert = pickUpBuilder.create();
                     pickUpAlert.setCanceledOnTouchOutside(false);
-                    pickUpAlert.show();
+                    if(!((Activity)view.getContext()).isFinishing()) {
+                        // TODO: figure out why the activity would finish before showing this
+                        pickUpAlert.show();
+                    }
                 } else if(mRoute.getStatus().toLowerCase().equals("picked up")) {
                     AlertDialog.Builder dropOffBuilder = new AlertDialog.Builder(mContext);
                     final ArrayList<Student> pickedUpStudents = new ArrayList<Student>();
@@ -279,7 +291,9 @@ public class ChaperoneActivity extends BaseActivity implements
                     });
                     AlertDialog dropOffAlert = dropOffBuilder.create();
                     dropOffAlert.setCanceledOnTouchOutside(false);
-                    dropOffAlert.show();
+                    if(!((Activity)view.getContext()).isFinishing()) {
+                        dropOffAlert.show();
+                    }
                 } else {
                     Log.d(TAG, "Route status does not require chaperone interaction");
                 }
@@ -505,7 +519,9 @@ public class ChaperoneActivity extends BaseActivity implements
 
                         AlertDialog lostAlert = lostAlertBuilder.create();
                         lostAlert.setCanceledOnTouchOutside(false);
-                        lostAlert.show();
+                        if(!((Activity)mContext).isFinishing()) {
+                            lostAlert.show();
+                        }
                     }
                 }
             }

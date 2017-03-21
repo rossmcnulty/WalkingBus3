@@ -141,7 +141,8 @@ public class ChaperoneStudentAdapter extends RecyclerView.Adapter<RecyclerView.V
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     User chap = dataSnapshot.getValue(User.class);
-                    DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(chap.getRoutes());
+                    // TODO: select route based on time
+                    DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(chap.getRoutes().keySet().toArray()[0].toString());
                     routeRef.addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
