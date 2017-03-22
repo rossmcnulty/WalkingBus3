@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import ut.walkingbus.Models.RoutePublic;
 import ut.walkingbus.Models.School;
-import ut.walkingbus.Models.Route;
 
 import static ut.walkingbus.R.id.map;
 
@@ -32,7 +32,7 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
     private static final String TAG = "RouteMapActivity";
 
     private GoogleMap mMap;
-    private ArrayList<Route> mRoutes;
+    private ArrayList<RoutePublic> mRoutes;
     private ArrayList<String> mRouteKeys;
     private School mSchool;
     private String mStudentKey;
@@ -80,7 +80,7 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
 
         DatabaseReference studentRef = FirebaseUtil.getStudentsRef().child(mStudentKey);
 
-        mRoutes = new ArrayList<Route>();
+        mRoutes = new ArrayList<RoutePublic>();
         mRouteKeys = new ArrayList<String>();
 
         studentRef.child("name").addListenerForSingleValueEvent(new ValueEventListener() {
@@ -124,15 +124,17 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
                                 for(DataSnapshot routeSnapshot : dataSnapshot.getChildren()) {
                                     String routeKey = routeSnapshot.getKey();
 
-                                    DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(routeKey);
+                                    DatabaseReference routePublicRef = FirebaseUtil.getRoutePublicRef(routeKey);
 
-                                    routeRef.addValueEventListener(new ValueEventListener() {
+                                    routePublicRef.addValueEventListener(new ValueEventListener() {
                                         @Override
                                         public void onDataChange(DataSnapshot dataSnapshot) {
-                                            Route route = dataSnapshot.getValue(Route.class);
+                                            RoutePublic route = dataSnapshot.getValue(RoutePublic.class);
                                             route.setKey(dataSnapshot.getKey());
                                             mRoutes.add(route);
-                                            String chapKey = route.getChaperone();
+                                            // TODO: get correct chap key based on DB structure decision
+                                            String chapKey = route.getChaperone().keySet().toArray()[0].toString();
+                                            Map<String, String> chaperone = route.getChaperone().get(chapKey);
 
                                             final Double lat = route.getLocation().get("lat");
                                             final Double lng = route.getLocation().get("lng");
@@ -140,53 +142,29 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
                                             final String routeTime = route.getTime();
                                             final String routeName = route.getName();
                                             final String routeKey = route.getKey();
+                                            final String chapName = chaperone.get("displayName");
+                                            final String chapPhone = chaperone.get("phone");
+                                            final String chapPhotoUrl = chaperone.get("photoUrl");
 
-                                            DatabaseReference chaperoneRef = FirebaseUtil.getUserRef().child(chapKey).child("displayName");
-                                            chaperoneRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                                                @Override
-                                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                                    String chapName = dataSnapshot.getValue().toString();
-                                                    Marker routeMarker;
-                                                    if(mCurrentRouteKey.equals(routeKey)) {
-                                                        routeMarker = mMap.addMarker(new MarkerOptions()
-                                                                .position(routeStart)
-                                                                .title(routeName)
-                                                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                                                                .snippet("Chaperone: " + chapName +
-                                                                        "\nTime: " + routeTime +
-                                                                        "\nClick to select this route"));
-                                                        routeMarker.setTag(routeKey);
-                                                    } else {
-                                                        routeMarker = mMap.addMarker(new MarkerOptions()
-                                                                .position(routeStart)
-                                                                .title(routeName)
-                                                                .snippet("Chaperone: " + chapName +
-                                                                        "\nTime: " + routeTime +
-                                                                        "\nClick to select this route"));
-                                                        routeMarker.setTag(routeKey);
-                                                    }
-                                                }
-
-                                                @Override
-                                                public void onCancelled(DatabaseError databaseError) {
-
-                                                }
-                                            });
-
-
-                                            String chapName = "";
-                                            // TODO: get chap name value programmatically
-                                            /*
-                                            Double lat = route.getLocation().get("lat");
-                                            Double lng = route.getLocation().get("lng");
-                                            LatLng routeStart = new LatLng(lat, lng);
-                                            Marker routeMarker = mMap.addMarker(new MarkerOptions()
-                                                    .position(routeStart)
-                                                    .title(route.getName())
-                                                    .snippet("Chaperone: " + chapName +
-                                                            "\nClick to select this route"));
-                                            routeMarker.setTag(route.getKey());
-                                            */
+                                            Marker routeMarker;
+                                            if(mCurrentRouteKey.equals(routeKey)) {
+                                                routeMarker = mMap.addMarker(new MarkerOptions()
+                                                        .position(routeStart)
+                                                        .title(routeName)
+                                                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                                                        .snippet("Chaperone: " + chapName +
+                                                                "\nTime: " + routeTime +
+                                                                "\nClick to select this route"));
+                                                routeMarker.setTag(routeKey);
+                                            } else {
+                                                routeMarker = mMap.addMarker(new MarkerOptions()
+                                                        .position(routeStart)
+                                                        .title(routeName)
+                                                        .snippet("Chaperone: " + chapName +
+                                                                "\nTime: " + routeTime +
+                                                                "\nClick to select this route"));
+                                                routeMarker.setTag(routeKey);
+                                            }
                                         }
 
                                         @Override
@@ -231,34 +209,18 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
 
         // TODO: replace existing routes
 
-        DatabaseReference routeStudentsRef = FirebaseUtil.getRouteStudentsRef(routeKey).child(mTimeslot.toLowerCase());
-        routeStudentsRef.updateChildren(routeStudentsValues,
+        Map propagatedRouteData = new HashMap();
+        propagatedRouteData.put("students/" + mStudentKey + "/routes/" + mTimeslot.toLowerCase(), marker.getTag().toString());
+        propagatedRouteData.put("routes/" + routeKey + "/private/students/" + mTimeslot.toLowerCase() + "/" + mStudentKey, mStudentName);
+
+        FirebaseUtil.getBaseRef().updateChildren(propagatedRouteData,
                 new DatabaseReference.CompletionListener() {
                     @Override
                     public void onComplete(DatabaseError firebaseError, DatabaseReference databaseReference) {
                         if (firebaseError != null) {
                             Toast.makeText(RouteMapActivity.this,
-                                    "Couldn't save route student data: " + firebaseError.getMessage(),
+                                    "Couldn't save route data: " + firebaseError.getMessage(),
                                     Toast.LENGTH_LONG).show();
-                        } else {
-                            Map studentRoutesValues = new HashMap();
-                            studentRoutesValues.put(mTimeslot, marker.getTag().toString());
-                            DatabaseReference studentRoutesRef = FirebaseUtil.getStudentRoutesRef(mStudentKey);
-                            studentRoutesRef.updateChildren(studentRoutesValues, new DatabaseReference.CompletionListener() {
-                                @Override
-                                public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-                                    if (databaseError != null) {
-                                        Toast.makeText(RouteMapActivity.this,
-                                                "Couldn't save student route data: " + databaseError.getMessage(),
-                                                Toast.LENGTH_LONG).show();
-                                    } else {
-                                        Toast.makeText(RouteMapActivity.this,
-                                                "Student route data set",
-                                                Toast.LENGTH_LONG).show();
-                                        RouteMapActivity.super.onBackPressed();
-                                    }
-                                }
-                            });
                         }
                     }
                 });

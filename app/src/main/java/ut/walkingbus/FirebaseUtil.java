@@ -55,7 +55,11 @@ class FirebaseUtil {
     }
 
     public static DatabaseReference getRouteStudentsRef(String key) {
-        return getRoutesRef().child(key).child("students");
+        return getRoutesRef().child(key).child("private").child("students");
+    }
+
+    public static DatabaseReference getRoutePublicRef(String key) {
+        return getRoutesRef().child(key).child("public");
     }
 
     public static DatabaseReference getSchoolUsersRef(String key) {
