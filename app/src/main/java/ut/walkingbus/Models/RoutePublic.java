@@ -11,7 +11,7 @@ public class RoutePublic {
     private String school;
     private String time;
     private String key;
-    private Map<String, Map<String, String>> chaperone;
+    private Map<String, Map<String, String>> chaperones;
     private Map<String, Double> location;
 
     public RoutePublic() {
@@ -58,11 +58,11 @@ public class RoutePublic {
         this.key = key;
     }
 
-    public Map<String, Map<String, String>> getChaperone() {
-        return chaperone;
+    public Map<String, Map<String, String>> getChaperones() {
+        return chaperones;
     }
 
-    public void setChaperone(Map<String, Map<String, String>> chaperone) {
-        this.chaperone = chaperone;
+    public void setChaperones(Map<String, Map<String, String>> chaperones) {
+        this.chaperones = chaperones;
     }
 }

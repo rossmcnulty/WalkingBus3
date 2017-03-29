@@ -93,9 +93,9 @@ public class AddStudentActivity extends BaseActivity {
 
         mSchoolArray = new ArrayList<School>();
 
-        mSchoolAdapter = new SchoolSpinAdapter(this, android.R.layout.simple_spinner_item, mSchoolArray);
+        mSchoolAdapter = new SchoolSpinAdapter(this, R.layout.spinner_item, mSchoolArray);
 
-        mSchoolAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mSchoolAdapter.setDropDownViewResource(R.layout.spinner_item);
         Spinner sItems = (Spinner) findViewById(R.id.add_school);
         sItems.setAdapter(mSchoolAdapter);
 
@@ -211,7 +211,7 @@ public class AddStudentActivity extends BaseActivity {
                             studentValues.put("bluetooth", bluetooth);
                             studentValues.put("name", name);
                             studentValues.put("info", info);
-                            studentValues.put("status", "no route");
+                            studentValues.put("status", "waiting");
                             studentValues.put("parents", studentParentsValues);
                             studentValues.put("school", schoolKey);
 

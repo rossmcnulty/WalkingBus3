@@ -16,8 +16,8 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.HashMap;
 import java.util.Map;
 
+import ut.walkingbus.Models.RoutePublic;
 import ut.walkingbus.Models.School;
-import ut.walkingbus.Models.Route;
 
 /**
  * Created by Ross on 3/1/2017.
@@ -29,7 +29,7 @@ public class RoutesActivity extends BaseActivity {
     private static int RESULT_LOAD_IMAGE = 1;
     private String name;
     private School mSchool;
-    private Map<String, Route> mRoutesByKey;
+    private Map<String, RoutePublic> mRoutesByKey;
     private Map<String, String> mRouteKeysByTimeslot;
     TextView monAmText;
     TextView monPmText;
@@ -108,10 +108,10 @@ public class RoutesActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 Intent routeMapIntent = new Intent(v.getContext(), RouteMapActivity.class);
-                routeMapIntent.putExtra("TIMESLOT", "TUES_AM");
+                routeMapIntent.putExtra("TIMESLOT", "TUE_AM");
                 routeMapIntent.putExtra("STUDENT_KEY", studentKey);
-                if(mCurrentRouteKeys.containsKey("TUES_AM")) {
-                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("TUES_AM"));
+                if(mCurrentRouteKeys.containsKey("TUE_AM")) {
+                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("TUE_AM"));
                 }
                 startActivity(routeMapIntent);
             }
@@ -122,10 +122,10 @@ public class RoutesActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 Intent routeMapIntent = new Intent(v.getContext(), RouteMapActivity.class);
-                routeMapIntent.putExtra("TIMESLOT", "TUES_PM");
+                routeMapIntent.putExtra("TIMESLOT", "TUE_PM");
                 routeMapIntent.putExtra("STUDENT_KEY", studentKey);
-                if(mCurrentRouteKeys.containsKey("TUES_PM")) {
-                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("TUES_PM"));
+                if(mCurrentRouteKeys.containsKey("TUE_PM")) {
+                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("TUE_PM"));
                 }
                 startActivity(routeMapIntent);
             }
@@ -164,10 +164,10 @@ public class RoutesActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 Intent routeMapIntent = new Intent(v.getContext(), RouteMapActivity.class);
-                routeMapIntent.putExtra("TIMESLOT", "THURS_AM");
+                routeMapIntent.putExtra("TIMESLOT", "THU_AM");
                 routeMapIntent.putExtra("STUDENT_KEY", studentKey);
-                if(mCurrentRouteKeys.containsKey("THURS_AM")) {
-                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("THURS_AM"));
+                if(mCurrentRouteKeys.containsKey("THU_AM")) {
+                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("THU_AM"));
                 }
                 startActivity(routeMapIntent);
             }
@@ -178,10 +178,10 @@ public class RoutesActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 Intent routeMapIntent = new Intent(v.getContext(), RouteMapActivity.class);
-                routeMapIntent.putExtra("TIMESLOT", "THURS_PM");
+                routeMapIntent.putExtra("TIMESLOT", "THU_PM");
                 routeMapIntent.putExtra("STUDENT_KEY", studentKey);
-                if(mCurrentRouteKeys.containsKey("THURS_PM")) {
-                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("THURS_PM"));
+                if(mCurrentRouteKeys.containsKey("THU_PM")) {
+                    routeMapIntent.putExtra("ROUTE_KEY", mCurrentRouteKeys.get("THU_PM"));
                 }
                 startActivity(routeMapIntent);
             }
@@ -216,7 +216,7 @@ public class RoutesActivity extends BaseActivity {
         });
 
 
-        mRoutesByKey = new HashMap<String, Route>();
+        mRoutesByKey = new HashMap<String, RoutePublic>();
         mRouteKeysByTimeslot = new HashMap<String, String>();
         mCurrentRouteKeys = new HashMap<String, String>();
 
@@ -233,11 +233,11 @@ public class RoutesActivity extends BaseActivity {
                     Log.d(TAG, "Timeslot pre " + timeslot);
                     mRouteKeysByTimeslot.put(timeslot, routeKey);
 
-                    DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(routeKey);
+                    DatabaseReference routeRef = FirebaseUtil.getRoutePublicRef(routeKey);
                     routeRef.addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-                            Route route = dataSnapshot.getValue(Route.class);
+                            RoutePublic route = dataSnapshot.getValue(RoutePublic.class);
                             route.setKey(dataSnapshot.getKey());
                             mRoutesByKey.put(route.getKey(), route);
 
@@ -250,10 +250,10 @@ public class RoutesActivity extends BaseActivity {
                                 case "MON_PM":
                                     monPmText.setText(route.getName());
                                     break;
-                                case "TUES_AM":
+                                case "TUE_AM":
                                     tuesAmText.setText(route.getName());
                                     break;
-                                case "TUES_PM":
+                                case "TUE_PM":
                                     tuesPmText.setText(route.getName());
                                     break;
                                 case "WED_AM":
@@ -262,10 +262,10 @@ public class RoutesActivity extends BaseActivity {
                                 case "WED_PM":
                                     wedPmText.setText(route.getName());
                                     break;
-                                case "THURS_AM":
+                                case "THU_AM":
                                     thursAmText.setText(route.getName());
                                     break;
-                                case "THURS_PM":
+                                case "THU_PM":
                                     thursPmText.setText(route.getName());
                                     break;
                                 case "FRI_AM":

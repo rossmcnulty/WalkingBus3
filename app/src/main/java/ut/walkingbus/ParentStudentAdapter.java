@@ -86,6 +86,7 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
     @Override
     public void onBindViewHolder(final MyViewHolder holder, int position) {
         final Student student = studentList.get(position);
+        mContext = holder.itemView.getContext();
         holder.name.setText(student.getName());
         holder.status.setText(student.getStatus());
         String status = student.getStatus();
@@ -114,46 +115,49 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
                                 studentRouteRefs.addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(DataSnapshot dataSnapshot) {
-                                        ArrayList<DatabaseReference> routeRefs = new ArrayList<DatabaseReference>();
+                                        ArrayList<String> routeRefs = new ArrayList<String>();
 
                                         if(dataSnapshot.hasChild("mon_am")) {
-                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("mon_am").getValue().toString()));
+                                            routeRefs.add("routes/" + dataSnapshot.child("mon_am").getValue().toString() + "/private/students/mon_am");
                                         }
                                         if(dataSnapshot.hasChild("mon_pm")) {
-                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("mon_pm").getValue().toString()));
+                                            routeRefs.add("routes/" + dataSnapshot.child("mon_pm").getValue().toString() + "/private/students/mon_pm");
                                         }
-                                        if(dataSnapshot.hasChild("tues_am")) {
-                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("tues_am").getValue().toString()));
+                                        if(dataSnapshot.hasChild("tue_am")) {
+                                            routeRefs.add("routes/" + dataSnapshot.child("tue_am").getValue().toString() + "/private/students/tue_am");
                                         }
-                                        if(dataSnapshot.hasChild("tues_pm")) {
-                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("tues_pm").getValue().toString()));
+                                        if(dataSnapshot.hasChild("tue_pm")) {
+                                            routeRefs.add("routes/" + dataSnapshot.child("tue_pm").getValue().toString() + "/private/students/tue_pm");
                                         }
                                         if(dataSnapshot.hasChild("wed_am")) {
-                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("wed_am").getValue().toString()));
+                                            routeRefs.add("routes/" + dataSnapshot.child("wed_am").getValue().toString() + "/private/students/wed_am");
                                         }
                                         if(dataSnapshot.hasChild("wed_pm")) {
-                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("wed_pm").getValue().toString()));
+                                            routeRefs.add("routes/" + dataSnapshot.child("wed_pm").getValue().toString() + "/private/students/wed_pm");
                                         }
-                                        if(dataSnapshot.hasChild("thurs_am")) {
-                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("thurs_am").getValue().toString()));
+                                        if(dataSnapshot.hasChild("thu_am")) {
+                                            routeRefs.add("routes/" + dataSnapshot.child("thu_am").getValue().toString() + "/private/students/thu_am");
                                         }
-                                        if(dataSnapshot.hasChild("thurs_pm")) {
-                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("thurs_pm").getValue().toString()));
+                                        if(dataSnapshot.hasChild("thu_pm")) {
+                                            routeRefs.add("routes/" + dataSnapshot.child("thu_pm").getValue().toString() + "/private/students/thu_pm");
                                         }
                                         if(dataSnapshot.hasChild("fri_am")) {
-                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("fri_am").getValue().toString()));
+                                            routeRefs.add("routes/" + dataSnapshot.child("fri_am").getValue().toString() + "/private/students/fri_am");
                                         }
                                         if(dataSnapshot.hasChild("fri_pm")) {
-                                            routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("fri_pm").getValue().toString()));
+                                            routeRefs.add("routes/" + dataSnapshot.child("fri_pm").getValue().toString() + "/private/students/fri_pm");
                                         }
 
                                         Map propagatedStudentValues = new HashMap<>();
                                         propagatedStudentValues.put("students/" + student.getKey(), null);
+                                        Log.d(TAG, "Student ref: " + "students/" + student.getKey());
                                         propagatedStudentValues.put("users/" + student.getParents().keySet().toArray()[0] + "/students/" + student.getKey(), null);
+                                        Log.d(TAG, "Users ref: " + "users/" + student.getParents().keySet().toArray()[0] + "/students/" + student.getKey());
                                         propagatedStudentValues.put("schools/" + student.getSchool() + "/students/" + student.getKey(), null);
-                                        for(DatabaseReference routeRef: routeRefs) {
-                                            Log.d(TAG, "Route ref: " + routeRef.toString());
-                                            propagatedStudentValues.put(routeRef.toString() + "/" + student.getKey(), null);
+                                        Log.d(TAG, "School ref: " + "schools/" + student.getSchool() + "/students/" + student.getKey());
+                                        for(String routeRef: routeRefs) {
+                                            Log.d(TAG, "Route ref: " + routeRef + "/" + student.getKey());
+                                            propagatedStudentValues.put(routeRef + "/" + student.getKey(), null);
                                         }
                                         FirebaseUtil.getBaseRef().updateChildren(propagatedStudentValues, new DatabaseReference.CompletionListener() {
                                             @Override

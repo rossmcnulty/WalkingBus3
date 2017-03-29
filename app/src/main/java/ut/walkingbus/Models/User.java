@@ -15,8 +15,17 @@ public class User {
     private Map<String, String> routes;
     private Map<String, String> schools_parent;
     private Map<String, String> students;
+    private String key;
 
     public User() {
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
     }
 
     public String getDisplayName() {

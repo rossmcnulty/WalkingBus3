@@ -51,6 +51,18 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
                 .findFragmentById(map);
         mapFragment.getMapAsync(this);
 
+        // get the student's school's routes
+        mStudentKey = getIntent().getStringExtra("STUDENT_KEY");
+        mTimeslot = getIntent().getStringExtra("TIMESLOT");
+        if(getIntent().hasExtra("ROUTE_KEY")) {
+            mCurrentRouteKey = getIntent().getStringExtra("ROUTE_KEY");
+        } else {
+            mCurrentRouteKey = "";
+        }
+
+
+        mRoutes = new ArrayList<RoutePublic>();
+        mRouteKeys = new ArrayList<String>();
     }
 
 
@@ -69,19 +81,7 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
         mMap.setInfoWindowAdapter(new MarkerInfoAdapter(getLayoutInflater()));
         mMap.setOnInfoWindowClickListener(this);
 
-        // get the student's school's routes
-        mStudentKey = getIntent().getStringExtra("STUDENT_KEY");
-        mTimeslot = getIntent().getStringExtra("TIMESLOT");
-        if(getIntent().hasExtra("ROUTE_KEY")) {
-            mCurrentRouteKey = getIntent().getStringExtra("ROUTE_KEY");
-        } else {
-            mCurrentRouteKey = "";
-        }
-
         DatabaseReference studentRef = FirebaseUtil.getStudentsRef().child(mStudentKey);
-
-        mRoutes = new ArrayList<RoutePublic>();
-        mRouteKeys = new ArrayList<String>();
 
         studentRef.child("name").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -122,7 +122,7 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 for(DataSnapshot routeSnapshot : dataSnapshot.getChildren()) {
-                                    String routeKey = routeSnapshot.getKey();
+                                    final String routeKey = routeSnapshot.getKey();
 
                                     DatabaseReference routePublicRef = FirebaseUtil.getRoutePublicRef(routeKey);
 
@@ -130,18 +130,18 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
                                         @Override
                                         public void onDataChange(DataSnapshot dataSnapshot) {
                                             RoutePublic route = dataSnapshot.getValue(RoutePublic.class);
-                                            route.setKey(dataSnapshot.getKey());
+                                            route.setKey(routeKey);
                                             mRoutes.add(route);
                                             // TODO: get correct chap key based on DB structure decision
-                                            String chapKey = route.getChaperone().keySet().toArray()[0].toString();
-                                            Map<String, String> chaperone = route.getChaperone().get(chapKey);
+                                            String chapKey = route.getChaperones().keySet().toArray()[0].toString();
+                                            Map<String, String> chaperone = route.getChaperones().get(chapKey);
 
                                             final Double lat = route.getLocation().get("lat");
                                             final Double lng = route.getLocation().get("lng");
                                             final LatLng routeStart = new LatLng(lat, lng);
                                             final String routeTime = route.getTime();
                                             final String routeName = route.getName();
-                                            final String routeKey = route.getKey();
+                                            // final String routeKey = route.getKey();
                                             final String chapName = chaperone.get("displayName");
                                             final String chapPhone = chaperone.get("phone");
                                             final String chapPhotoUrl = chaperone.get("photoUrl");
@@ -221,9 +221,14 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
                             Toast.makeText(RouteMapActivity.this,
                                     "Couldn't save route data: " + firebaseError.getMessage(),
                                     Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(RouteMapActivity.this,
+                                    "Route data saved ",
+                                    Toast.LENGTH_LONG).show();
                         }
                     }
                 });
+        super.onBackPressed();
     }
 
 }

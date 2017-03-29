@@ -22,7 +22,8 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.List;
 
-import ut.walkingbus.Models.Route;
+import ut.walkingbus.Models.RoutePrivate;
+import ut.walkingbus.Models.RoutePublic;
 import ut.walkingbus.Models.Student;
 import ut.walkingbus.Models.User;
 
@@ -90,6 +91,7 @@ public class ChaperoneStudentAdapter extends RecyclerView.Adapter<RecyclerView.V
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+        mContext = holder.itemView.getContext();
         if (holder instanceof VHStudent) {
             //cast holder to VHItem and set data
             final VHStudent studHolder = (VHStudent) holder;
@@ -146,10 +148,11 @@ public class ChaperoneStudentAdapter extends RecyclerView.Adapter<RecyclerView.V
                     routeRef.addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-                            Route r = dataSnapshot.getValue(Route.class);
-                            header.name.setText(r.getName());
-                            header.time.setText(r.getTime());
-                            header.location.setText("Lat, Lng: " + r.getLocation().get("lat") + " " + r.getLocation().get("lng"));
+                            RoutePublic routePublic = dataSnapshot.child("public").getValue(RoutePublic.class);
+                            RoutePrivate routePrivate = dataSnapshot.child("private").getValue(RoutePrivate.class);
+                            header.name.setText(routePublic.getName());
+                            header.time.setText(routePublic.getTime());
+                            header.location.setText("Lat, Lng: " + routePublic.getLocation().get("lat") + " " + routePublic.getLocation().get("lng"));
                         }
 
                         @Override

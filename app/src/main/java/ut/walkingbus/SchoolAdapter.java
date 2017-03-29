@@ -14,8 +14,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -28,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import ut.walkingbus.Models.School;
+import ut.walkingbus.Models.User;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
@@ -119,31 +118,44 @@ public class SchoolAdapter extends RecyclerView.Adapter<SchoolAdapter.MyViewHold
 
                 schoolCodeBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        Map parentSchoolValues = new HashMap<>();
-                        parentSchoolValues.put(school.getKey(), school.getName());
-                        String schoolCode = input.getText().toString();
-                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-
-                        Map propagatedSchoolValues = new HashMap();
-                        propagatedSchoolValues.put("users/" + user.getUid() + "/schools_parent", parentSchoolValues);
-
-                        Map schoolParentValues = new HashMap();
-                        schoolParentValues.put("displayName", user.getDisplayName());
-                        schoolParentValues.put("code", schoolCode);
-                        schoolParentValues.put("photoUrl", user.getPhotoUrl().toString());
-                        Log.d(TAG, "Path: " + "schools/" + school.getKey() + "/users/" + user.getUid());
-                        Log.d(TAG, "Value: " + schoolParentValues.keySet().toString());
-                        propagatedSchoolValues.put("schools/" + school.getKey() + "/users/" + user.getUid(), schoolParentValues);
-
-                        FirebaseUtil.getBaseRef().updateChildren(propagatedSchoolValues, new DatabaseReference.CompletionListener() {
+                        FirebaseUtil.getUserRef().child(FirebaseUtil.getCurrentUserId()).addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
-                            public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-                                if (databaseError != null) {
-                                    Log.d(TAG, "Save data failed");
-                                    Toast.makeText(input.getContext(),
-                                            "Couldn't save school data: " + databaseError.getMessage(),
-                                            Toast.LENGTH_LONG).show();
-                                }
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                User user = dataSnapshot.getValue(User.class);
+                                user.setKey(dataSnapshot.getKey());
+
+                                Map parentSchoolValues = new HashMap<>();
+                                parentSchoolValues.put(school.getKey(), school.getName());
+                                String schoolCode = input.getText().toString();
+
+                                Map propagatedSchoolValues = new HashMap();
+                                propagatedSchoolValues.put("users/" + user.getKey() + "/schools_parent/" + school.getKey(), school.getName());
+
+                                Map schoolParentValues = new HashMap();
+                                schoolParentValues.put("displayName", user.getDisplayName());
+                                schoolParentValues.put("code", schoolCode);
+                                schoolParentValues.put("photoUrl", user.getPhotoUrl().toString());
+                                schoolParentValues.put("phone", user.getPhone().toString());
+                                Log.d(TAG, "Path: " + "schools/" + school.getKey() + "/users/" + user.getKey());
+                                Log.d(TAG, "Value: " + schoolParentValues.keySet().toString());
+                                propagatedSchoolValues.put("schools/" + school.getKey() + "/users/" + user.getKey(), schoolParentValues);
+
+                                FirebaseUtil.getBaseRef().updateChildren(propagatedSchoolValues, new DatabaseReference.CompletionListener() {
+                                    @Override
+                                    public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                                        if (databaseError != null) {
+                                            Log.d(TAG, "Save data failed");
+                                            Toast.makeText(input.getContext(),
+                                                    "Couldn't save school data: " + databaseError.getMessage(),
+                                                    Toast.LENGTH_LONG).show();
+                                        }
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
                             }
                         });
                     }

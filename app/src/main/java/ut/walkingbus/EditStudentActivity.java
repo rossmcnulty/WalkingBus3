@@ -106,9 +106,9 @@ public class EditStudentActivity extends BaseActivity {
 
         mSchoolArray = new ArrayList<School>();
 
-        mSchoolAdapter = new SchoolSpinAdapter(this, android.R.layout.simple_spinner_item, mSchoolArray);
+        mSchoolAdapter = new SchoolSpinAdapter(this, R.layout.spinner_item, mSchoolArray);
 
-        mSchoolAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mSchoolAdapter.setDropDownViewResource(R.layout.spinner_item);
         Spinner sItems = (Spinner) findViewById(R.id.add_school);
         sItems.setAdapter(mSchoolAdapter);
 
@@ -136,7 +136,7 @@ public class EditStudentActivity extends BaseActivity {
         final String studentKey = getIntent().getStringExtra("STUDENT_KEY");
         DatabaseReference studentRef = FirebaseUtil.getStudentsRef();
 
-        studentRef.child(studentKey).addValueEventListener(new ValueEventListener() {
+        studentRef.child(studentKey).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 mStudent = dataSnapshot.getValue(Student.class);
@@ -254,11 +254,11 @@ public class EditStudentActivity extends BaseActivity {
                             if(dataSnapshot.hasChild("mon_pm")) {
                                 routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("mon_pm").getValue().toString()));
                             }
-                            if(dataSnapshot.hasChild("tues_am")) {
-                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("tues_am").getValue().toString()));
+                            if(dataSnapshot.hasChild("tue_am")) {
+                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("tue_am").getValue().toString()));
                             }
-                            if(dataSnapshot.hasChild("tues_pm")) {
-                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("tues_pm").getValue().toString()));
+                            if(dataSnapshot.hasChild("tue_pm")) {
+                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("tue_pm").getValue().toString()));
                             }
                             if(dataSnapshot.hasChild("wed_am")) {
                                 routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("wed_am").getValue().toString()));
@@ -266,11 +266,11 @@ public class EditStudentActivity extends BaseActivity {
                             if(dataSnapshot.hasChild("wed_pm")) {
                                 routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("wed_pm").getValue().toString()));
                             }
-                            if(dataSnapshot.hasChild("thurs_am")) {
-                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("thurs_am").getValue().toString()));
+                            if(dataSnapshot.hasChild("thu_am")) {
+                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("thu_am").getValue().toString()));
                             }
-                            if(dataSnapshot.hasChild("thurs_pm")) {
-                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("thurs_pm").getValue().toString()));
+                            if(dataSnapshot.hasChild("thu_pm")) {
+                                routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("thu_pm").getValue().toString()));
                             }
                             if(dataSnapshot.hasChild("fri_am")) {
                                 routeRefs.add(FirebaseUtil.getRoutesRef().child(dataSnapshot.child("fri_am").getValue().toString()));
@@ -297,7 +297,7 @@ public class EditStudentActivity extends BaseActivity {
                             if(!mStudent.getSchool().equals(schoolKey)) {
                                 // Student changed schools
                                 Log.d(TAG, "School changed, deleting earlier school and route data");
-                                studentValues.put("status", "no route");
+                                studentValues.put("status", "waiting");
                                 propagatedStudentData.put("schools/" + mStudent.getSchool() + "/students/" + studentKey, null);
                                 for(DatabaseReference routeRef: routeRefs) {
                                     propagatedStudentData.put(routeRef.toString() + "/" + mStudent.getKey(), null);

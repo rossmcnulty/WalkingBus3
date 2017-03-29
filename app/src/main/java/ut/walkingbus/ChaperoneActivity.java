@@ -10,6 +10,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -43,9 +45,12 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
-import ut.walkingbus.Models.Route;
+import ut.walkingbus.Models.RoutePrivate;
+import ut.walkingbus.Models.RoutePublic;
 import ut.walkingbus.Models.Student;
 import ut.walkingbus.Models.User;
 
@@ -61,7 +66,8 @@ public class ChaperoneActivity extends BaseActivity implements
     //private ArrayList<Student> mLostStudents;
     private ArrayList<Student> mStudents;
     private ChaperoneStudentAdapter mStudentAdapter;
-    private Route mRoute;
+    private RoutePublic mRoutePublic;
+    private RoutePrivate mRoutePrivate;
     private String mRouteKey;
     private String mTimeslot;
     private Context mContext;
@@ -84,6 +90,7 @@ public class ChaperoneActivity extends BaseActivity implements
     private BluetoothAdapter mBLEAdapter;
     private BluetoothManager manager;
     private Handler scanHandler = new Handler();
+    private LocationManager mLocationManager;
 
     private static final int RC_SIGN_IN = 103;
 
@@ -101,6 +108,8 @@ public class ChaperoneActivity extends BaseActivity implements
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+
         mContext = this;
 
         mRouteKey = "";
@@ -117,17 +126,22 @@ public class ChaperoneActivity extends BaseActivity implements
                 routeRef.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        mRoute = dataSnapshot.getValue(Route.class);
-                        Log.d(TAG, "Route name " + mRoute.getName());
-                        if(mRoute.getStudents() == null) {
-                            Log.d(TAG, "No students in route " + mRoute.getName());
+                        if(!dataSnapshot.exists() || !dataSnapshot.hasChild("public") || !dataSnapshot.hasChild("private")) {
+                            Log.d(TAG, "Route does not exist");
                             return;
                         }
-                        if(mRoute.getStudents().get(mTimeslot) == null) {
+                        mRoutePublic = dataSnapshot.child("public").getValue(RoutePublic.class);
+                        mRoutePrivate = dataSnapshot.child("private").getValue(RoutePrivate.class);
+                        Log.d(TAG, "Route name " + mRoutePublic.getName());
+                        if(mRoutePrivate.getStudents() == null) {
+                            Log.d(TAG, "No students in route " + mRoutePublic.getName());
+                            return;
+                        }
+                        if(mRoutePrivate.getStudents().get(mTimeslot) == null) {
                             Log.d(TAG, "No students in timeslot " + mTimeslot);
                             return;
                         }
-                        for(String studentKey: mRoute.getStudents().get(mTimeslot).keySet()) {
+                        for(String studentKey: mRoutePrivate.getStudents().get(mTimeslot).keySet()) {
                             Log.d(TAG, "Student key " + studentKey);
                             DatabaseReference studentRef = FirebaseUtil.getStudentsRef().child(studentKey);
                             studentRef.addValueEventListener(new ValueEventListener() {
@@ -194,11 +208,24 @@ public class ChaperoneActivity extends BaseActivity implements
         // selectively disable BLE-related features.
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Toast.makeText(this, "BLE is not supported on this device", Toast.LENGTH_SHORT).show();
-            //finish();
+            finish();
+        }
+        // Use this check to determine whether BLE is supported on the device.  Then you can
+        // selectively disable BLE-related features.
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS)) {
+            Toast.makeText(this, "GPS is not supported on this device", Toast.LENGTH_SHORT).show();
+            finish();
         }
         // Prompt for permissions
         if (Build.VERSION.SDK_INT >= 23) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                Log.w("BleActivity", "Location access not granted!");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSION_RESPONSE);
+            }
+        }
+        // Prompt for permissions
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 Log.w("BleActivity", "Location access not granted!");
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSION_RESPONSE);
             }
@@ -213,20 +240,21 @@ public class ChaperoneActivity extends BaseActivity implements
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(mRoute == null) {
+                if(mRoutePublic == null || mRoutePrivate == null) {
                     Log.d(TAG, "Route null");
                     return;
                 }
-                Log.d(TAG, "FAB Clicked, status " + mRoute.getStatus());
+                Log.d(TAG, "FAB Clicked, status " + mRoutePrivate.getStatus());
                 // pick up children
-                if(mRoute.getStatus().toLowerCase().equals("waiting")) {
+                if(mRoutePrivate.getStatus().toLowerCase().equals("waiting")) {
                     AlertDialog.Builder pickUpBuilder = new AlertDialog.Builder(mContext);
                     final ArrayList<Student> foundStudents = new ArrayList<Student>();
                     String studentNames = "";
                     for(Student s : mStudents) {
                         if(mFoundBluetooth.contains(s.getBluetooth())) {
                             foundStudents.add(s);
-                            studentNames += "\n" + s.getName();
+                            studentNames += "\n " + s.getName();
+                            Log.d(TAG, "Student: " + s.getName());
                         }
                     }
                     pickUpBuilder.setMessage("Confirm pickup of" + studentNames)
@@ -239,7 +267,7 @@ public class ChaperoneActivity extends BaseActivity implements
                                 DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("status");
                                 studentStatusRef.setValue("picked up");
                             }
-                            DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey).child("status");
+                            DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey).child("private").child("status");
                             routeRef.setValue("picked up");
                             dialog.dismiss();
                             Log.d(TAG, "Setting picked up to true");
@@ -257,7 +285,7 @@ public class ChaperoneActivity extends BaseActivity implements
                         // TODO: figure out why the activity would finish before showing this
                         pickUpAlert.show();
                     }
-                } else if(mRoute.getStatus().toLowerCase().equals("picked up")) {
+                } else if(mRoutePrivate.getStatus().toLowerCase().equals("picked up")) {
                     AlertDialog.Builder dropOffBuilder = new AlertDialog.Builder(mContext);
                     final ArrayList<Student> pickedUpStudents = new ArrayList<Student>();
                     String studentNames = "";
@@ -278,7 +306,7 @@ public class ChaperoneActivity extends BaseActivity implements
                                 studentStatusRef.setValue("dropped off");
                             }
                             Log.d(TAG, "Setting dropped off to true");
-                            DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey).child("status");
+                            DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey).child("private").child("status");
                             routeRef.setValue("dropped off");
                             dialog.dismiss();
                         }
@@ -453,7 +481,7 @@ public class ChaperoneActivity extends BaseActivity implements
     private Runnable stopScan = new Runnable() {
         @Override
         public void run() {
-            if(mRoute.getStatus().toLowerCase().equals("waiting")) {
+            if(mRoutePrivate.getStatus().toLowerCase().equals("waiting")) {
                 for (Student s : mStudents) {
                     Log.d(TAG, "BT Expected Student " + s.getName());
                     for (BluetoothDevice d : sensorTagDevices) {
@@ -492,7 +520,7 @@ public class ChaperoneActivity extends BaseActivity implements
                         }
                     }
 
-                    if (!found && !mRoute.getStatus().toLowerCase().equals("dropped off")
+                    if (!found && !mRoutePrivate.getStatus().toLowerCase().equals("dropped off")
                             && !s.getStatus().toLowerCase().equals("lost")
                             && !mLostStudentPopups.contains(s.getKey())) {
                         Log.d(TAG, "Could not find student " + s.getName());
@@ -504,6 +532,16 @@ public class ChaperoneActivity extends BaseActivity implements
                             public void onClick(DialogInterface dialog, int id) {
                                 // User clicked OK button
                                 DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("status");
+                                DatabaseReference studentLocationRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("location");
+                                if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                    Log.w("BleActivity", "Location access not granted!");
+                                    ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSION_RESPONSE);
+                                }
+                                Location lastKnownLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                                Map locationValue = new HashMap();
+                                locationValue.put("lat", lastKnownLocation.getLatitude());
+                                locationValue.put("lng", lastKnownLocation.getLongitude());
+                                studentLocationRef.setValue(locationValue);
                                 studentStatusRef.setValue("lost");
                                 mLostStudentPopups.remove(s.getKey());
                                 dialog.dismiss();
