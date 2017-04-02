@@ -15,12 +15,18 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.signature.StringSignature;
+import com.firebase.ui.storage.images.FirebaseImageLoader;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.List;
+import java.util.UUID;
 
 import ut.walkingbus.Models.RoutePrivate;
 import ut.walkingbus.Models.RoutePublic;
@@ -33,6 +39,7 @@ public class ChaperoneStudentAdapter extends RecyclerView.Adapter<RecyclerView.V
     private static final int TYPE_ITEM = 1;
     private List<Student> studentList;
     private Context mContext;
+    private FirebaseStorage mStorage;
 
     public class VHStudent extends RecyclerView.ViewHolder {
         public TextView name, status, parent_name;
@@ -74,6 +81,8 @@ public class ChaperoneStudentAdapter extends RecyclerView.Adapter<RecyclerView.V
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        mStorage = FirebaseStorage.getInstance();
+
         if (viewType == TYPE_ITEM) {
             //inflate your layout and pass it to view holder
             View itemView = LayoutInflater.from(parent.getContext())
@@ -99,7 +108,24 @@ public class ChaperoneStudentAdapter extends RecyclerView.Adapter<RecyclerView.V
             studHolder.name.setText(student.getName());
             studHolder.status.setText(student.getStatus());
             String status = student.getStatus();
+
             Log.d(TAG, "Status: " + status);
+            if(student.getPhotoUrl() != null) {
+                Log.d(TAG, "Student has Photo URL");
+
+                StorageReference gsReference = mStorage.getReferenceFromUrl(student.getPhotoUrl());
+
+                // ImageView in your Activity
+                ImageView imageView = studHolder.picture;
+                imageView.setBackgroundColor(0);
+
+                // Load the image using Glide
+                Glide.with(mContext)
+                        .using(new FirebaseImageLoader())
+                        .load(gsReference)
+                        .signature(new StringSignature(UUID.randomUUID().toString()))
+                        .into(imageView);
+            }
 
             String parentKey = student.getParents().keySet().iterator().next().toString();
             Log.d(TAG, "User key " + parentKey);
@@ -144,6 +170,10 @@ public class ChaperoneStudentAdapter extends RecyclerView.Adapter<RecyclerView.V
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     User chap = dataSnapshot.getValue(User.class);
                     // TODO: select route based on time
+                    if(chap.getRoutes() == null || chap.getRoutes().isEmpty()) {
+                        Log.d(TAG, "No routes");
+                        return;
+                    }
                     DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(chap.getRoutes().keySet().toArray()[0].toString());
                     routeRef.addValueEventListener(new ValueEventListener() {
                         @Override

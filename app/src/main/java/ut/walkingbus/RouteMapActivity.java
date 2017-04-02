@@ -115,6 +115,7 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
                                 .snippet("")
                                 .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_school)));
                         mMap.moveCamera(CameraUpdateFactory.newLatLng(schoolLocation));
+                        Log.d(TAG, "School position: " + schoolLocation.latitude + ", " + schoolLocation.longitude);
 
                         DatabaseReference schoolRoutesRef = FirebaseUtil.getSchoolsRoutesRef(mSchool.getKey());
 
@@ -145,6 +146,8 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
                                             final String chapName = chaperone.get("displayName");
                                             final String chapPhone = chaperone.get("phone");
                                             final String chapPhotoUrl = chaperone.get("photoUrl");
+
+                                            Log.d(TAG, "Route name: " + routeName);
 
                                             Marker routeMarker;
                                             if(mCurrentRouteKey.equals(routeKey)) {

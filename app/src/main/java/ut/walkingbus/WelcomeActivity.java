@@ -96,6 +96,9 @@ public class WelcomeActivity extends BaseActivity implements View.OnClickListene
         } else {
             // Unsuccessful Google Sign In, show signed-out UI
             Log.d(TAG, "Google Sign-In failed.");
+            if(result.getStatus().hasResolution()) {
+                Log.d(TAG, "Resolution: " + result.getStatus().getResolution());
+            }
         }
     }
 

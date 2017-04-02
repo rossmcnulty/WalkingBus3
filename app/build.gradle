@@ -9,7 +9,7 @@ android {
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"
-        multiDexEnabled  true
+        multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -41,8 +41,10 @@ dependencies {
     compile 'com.google.android.gms:play-services:10.2.0'
     compile 'com.google.firebase:firebase-messaging:10.0.1'
     compile 'com.firebase:firebase-jobdispatcher:0.5.2'
+    compile 'com.google.android.gms:play-services-maps:10.2.0'
     testCompile 'junit:junit:4.12'
 }
+
 
 
 apply plugin: 'com.google.gms.google-services'

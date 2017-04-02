@@ -72,6 +72,7 @@ public class ChaperoneActivity extends BaseActivity implements
     private String mTimeslot;
     private Context mContext;
     private int mCurrentDay;
+    private static final int INTERVAL = 1000*60;
 
     private ArrayList<String> mLostStudentPopups;
 
@@ -112,7 +113,45 @@ public class ChaperoneActivity extends BaseActivity implements
 
         mContext = this;
 
+        // TODO: stop app if no routes for user
+
         mRouteKey = "";
+        Calendar c = Calendar.getInstance();
+        int am_pm = c.get(Calendar.AM_PM);
+        int day = c.get(Calendar.DAY_OF_WEEK);
+        mTimeslot = "";
+        switch(day) {
+            case Calendar.SUNDAY:
+                mTimeslot = "sun";
+                break;
+            case Calendar.MONDAY:
+                mTimeslot = "mon";
+                break;
+            case Calendar.TUESDAY:
+                mTimeslot = "tue";
+                break;
+            case Calendar.WEDNESDAY:
+                mTimeslot = "wed";
+                break;
+            case Calendar.THURSDAY:
+                mTimeslot = "thu";
+                break;
+            case Calendar.FRIDAY:
+                mTimeslot = "fri";
+                break;
+            case Calendar.SATURDAY:
+                mTimeslot = "sat";
+                break;
+        }
+        if(am_pm == Calendar.AM) {
+            mTimeslot += "_am";
+        } else {
+            mTimeslot += "_pm";
+        }
+        // mTimeslot = "mon_am";
+        Log.d(TAG, "Timeslot: " + mTimeslot);
+        // TODO: remove this line
+        mTimeslot = "mon_am";
 
         // TODO: don't hardcode these pls
         DatabaseReference chapRef = FirebaseUtil.getUserRef().child(FirebaseUtil.getCurrentUserId());
@@ -121,6 +160,11 @@ public class ChaperoneActivity extends BaseActivity implements
             public void onDataChange(DataSnapshot dataSnapshot) {
                 User chap = dataSnapshot.getValue(User.class);
                 // TODO: Select route based on time
+                if(chap.getRoutes() == null || chap.getRoutes().isEmpty()) {
+                    Toast.makeText(ChaperoneActivity.this, "User is not chaperone of any routes", Toast.LENGTH_LONG).show();
+                    Log.d(TAG, "No routes");
+                    return;
+                }
                 mRouteKey = chap.getRoutes().keySet().toArray()[0].toString();
                 DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey);
                 routeRef.addValueEventListener(new ValueEventListener() {
@@ -187,10 +231,6 @@ public class ChaperoneActivity extends BaseActivity implements
 
             }
         });
-
-
-        // mRouteKey = "-KeWJO4qs-CcAyFf1pcC";
-        mTimeslot = "mon_am";
 
         setTitle("Today's Bus");
 
@@ -481,7 +521,7 @@ public class ChaperoneActivity extends BaseActivity implements
     private Runnable stopScan = new Runnable() {
         @Override
         public void run() {
-            if(mRoutePrivate.getStatus().toLowerCase().equals("waiting")) {
+            if(mRoutePrivate != null && mRoutePrivate.getStatus().toLowerCase().equals("waiting")) {
                 for (Student s : mStudents) {
                     Log.d(TAG, "BT Expected Student " + s.getName());
                     for (BluetoothDevice d : sensorTagDevices) {

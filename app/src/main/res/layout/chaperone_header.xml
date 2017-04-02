@@ -16,7 +16,7 @@
                 android:id="@+id/name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Filler Name"
+                android:text="No routes listed for this user in this timeslot"
                 android:layout_marginBottom="5dp"
                 android:layout_marginLeft="5dp"
                 android:textSize="20sp"/>
@@ -24,7 +24,7 @@
                 android:id="@+id/time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Filler Time"
+                android:text="Contact your school admin to learn more"
                 android:layout_marginBottom="5dp"
                 android:layout_marginLeft="5dp"
                 android:textSize="20sp"/>
@@ -32,7 +32,7 @@
                 android:id="@+id/location"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Filler Location"
+                android:text=""
                 android:layout_marginBottom="5dp"
                 android:layout_marginLeft="5dp"
                 android:textSize="20sp"/>

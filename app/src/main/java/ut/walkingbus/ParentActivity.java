@@ -53,6 +53,8 @@ public class ParentActivity extends BaseActivity implements
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        setTitle("Your Children");
+
         // Initialize authentication and set up callbacks
         mAuth = FirebaseAuth.getInstance();
 
