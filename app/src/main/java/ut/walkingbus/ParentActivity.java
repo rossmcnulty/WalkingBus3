@@ -26,6 +26,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.ArrayList;
 
@@ -77,6 +78,8 @@ public class ParentActivity extends BaseActivity implements
                 startActivity(new Intent(ParentActivity.this, AddStudentActivity.class));
             }
         });
+
+        Log.d(TAG, "FCM token: " + FirebaseInstanceId.getInstance().getToken());
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(

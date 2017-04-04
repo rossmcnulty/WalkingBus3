@@ -1,6 +1,8 @@
 package ut.walkingbus;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -23,7 +25,9 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 public class WelcomeActivity extends BaseActivity implements View.OnClickListener,
         GoogleApiClient.OnConnectionFailedListener {
@@ -123,6 +127,10 @@ public class WelcomeActivity extends BaseActivity implements View.OnClickListene
     }
 
     private void swapActivity() {
+        SharedPreferences sharedPref = this.getSharedPreferences("uid_file", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString("USER_ID", currentUser.getUid());
+        editor.commit();
         if(isParent) {
             // go to isParent activity
             Intent parentLoginIntent = new Intent(getBaseContext(), ParentActivity.class);
@@ -144,6 +152,8 @@ public class WelcomeActivity extends BaseActivity implements View.OnClickListene
                 @Override
                 public void onDataChange(DataSnapshot snapshot) {
                     if (snapshot.exists()) {
+                        DatabaseReference userFcmRef = FirebaseUtil.getUserRef().child(currentUser.getUid()).child("fcm");
+                        userFcmRef.setValue(FirebaseInstanceId.getInstance().getToken());
                         swapActivity();
                     } else {
                         Intent createAccountIntent = new Intent(getBaseContext(), CreateAccountActivity.class);

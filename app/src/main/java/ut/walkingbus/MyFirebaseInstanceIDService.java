@@ -4,6 +4,8 @@ package ut.walkingbus;
  * Created by Ross on 3/29/2017.
  */
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -15,6 +17,7 @@ import com.google.firebase.iid.FirebaseInstanceIdService;
 public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
 
     private static final String TAG = "MyFirebaseIIDService";
+    private String userId;
 
     /**
      * Called if InstanceID token is updated. This may occur if the security of
@@ -44,9 +47,15 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
      * @param token The new token.
      */
     private void sendRegistrationToServer(String token) {
+        SharedPreferences sharedPref = this.getSharedPreferences("uid_file", Context.MODE_PRIVATE);
+        String uid = sharedPref.getString("USER_ID", null);
         if(FirebaseAuth.getInstance().getCurrentUser() != null) {
             Log.d(TAG, token);
             DatabaseReference userFcmRef = FirebaseUtil.getUserRef().child(FirebaseUtil.getCurrentUserId()).child("fcm");
+            userFcmRef.setValue(token);
+        } else if(uid != null) {
+            Log.d(TAG, token);
+            DatabaseReference userFcmRef = FirebaseUtil.getUserRef().child(uid).child("fcm");
             userFcmRef.setValue(token);
         }
     }

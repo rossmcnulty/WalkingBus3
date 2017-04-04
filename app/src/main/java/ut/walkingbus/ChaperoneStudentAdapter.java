@@ -128,8 +128,12 @@ public class ChaperoneStudentAdapter extends RecyclerView.Adapter<RecyclerView.V
             }
 
             String parentKey = student.getParents().keySet().iterator().next().toString();
+            studHolder.parent_name.setText(student.getParents().get(parentKey).get("displayName"));
+            studHolder.phone = (student.getParents().get(parentKey).get("phone"));
+
             Log.d(TAG, "User key " + parentKey);
             DatabaseReference parentRef = FirebaseUtil.getUserRef().child(parentKey);
+            /*
             parentRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
@@ -143,6 +147,7 @@ public class ChaperoneStudentAdapter extends RecyclerView.Adapter<RecyclerView.V
 
                 }
             });
+            */
 
             studHolder.message.setOnClickListener(new View.OnClickListener() {
                 @Override

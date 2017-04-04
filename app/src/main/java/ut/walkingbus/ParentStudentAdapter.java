@@ -36,8 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import ut.walkingbus.Models.RoutePublic;
 import ut.walkingbus.Models.Student;
-import ut.walkingbus.Models.User;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
@@ -213,9 +213,49 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
             holder.call.setVisibility(VISIBLE);
             holder.chaperone_name.setVisibility(VISIBLE);
 
-            String parentKey = student.getParents().keySet().iterator().next().toString();
-            Log.d(TAG, "User key " + parentKey);
-            DatabaseReference parentRef = FirebaseUtil.getUserRef().child(parentKey);
+            FirebaseUtil.getBaseRef().child("current_timeslot").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    DatabaseReference studentRouteRef = FirebaseUtil.getStudentsRef().child(student.getKey()).child("routes").child(dataSnapshot.getValue().toString());
+                    studentRouteRef.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            DatabaseReference routeChaperoneRef = FirebaseUtil.getRoutePublicRef(dataSnapshot.getValue().toString());
+                            routeChaperoneRef.addValueEventListener(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    RoutePublic route = dataSnapshot.getValue(RoutePublic.class);
+                                    String chapKey = route.getChaperones().keySet().iterator().next().toString();
+
+                                    holder.chaperone_name.setText(route.getChaperones().get(chapKey).get("displayName"));
+                                    holder.phone = route.getChaperones().get(chapKey).get("phone");
+                                }
+
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+            String chaperoneKey = student.getParents().keySet().iterator().next().toString();
+
+            /*
+            Log.d(TAG, "Chaperone key " + chaperoneKey);
+            DatabaseReference parentRef = FirebaseUtil.getUserRef().child(chaperoneKey);
             parentRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
@@ -229,6 +269,7 @@ public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdap
 
                 }
             });
+            */
 
             holder.message.setOnClickListener(new View.OnClickListener() {
                 @Override

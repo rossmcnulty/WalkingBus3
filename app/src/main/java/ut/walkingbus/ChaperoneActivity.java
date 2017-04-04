@@ -3,6 +3,8 @@ package ut.walkingbus;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -11,14 +13,15 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -60,10 +63,6 @@ public class ChaperoneActivity extends BaseActivity implements
     private static final String TAG = "ChaperoneActivity";
     private FirebaseAuth mAuth;
     private GoogleApiClient mGoogleApiClient;
-    //private ArrayList<Student> mExpectedStudents;
-    //private ArrayList<Student> mFoundStudents;
-    //private ArrayList<Student> mPickedUpStudents;
-    //private ArrayList<Student> mLostStudents;
     private ArrayList<Student> mStudents;
     private ChaperoneStudentAdapter mStudentAdapter;
     private RoutePublic mRoutePublic;
@@ -72,6 +71,7 @@ public class ChaperoneActivity extends BaseActivity implements
     private String mTimeslot;
     private Context mContext;
     private int mCurrentDay;
+    private boolean mGpsDropoffPrompted;
     private static final int INTERVAL = 1000*60;
 
     private ArrayList<String> mLostStudentPopups;
@@ -84,15 +84,22 @@ public class ChaperoneActivity extends BaseActivity implements
     private TextView mProfileEmail;
     private TextView mProfileUsername;
 
-    private static final int MY_PERMISSION_RESPONSE = 2;
+    private static final int MY_PERMISSIONS_REQUEST_COARSE_LOCATION = 1;
+    private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 2;
     private ArrayList<BluetoothDevice> sensorTagDevices = new ArrayList<BluetoothDevice>();
     private ArrayList<BluetoothDevice> allDevices = new ArrayList<BluetoothDevice>();
 
     private BluetoothAdapter mBLEAdapter;
     private BluetoothManager manager;
     private Handler scanHandler = new Handler();
+    private Handler locationHandler = new Handler();
     private LocationManager mLocationManager;
+    private Location chapLocation;
+    private Double mSchoolLat;
+    private Double mSchoolLng;
 
+    private static final int GPS_TIME_INTERVAL = 1000;
+    private static final int GPS_DISTANCE = 0;
     private static final int RC_SIGN_IN = 103;
 
     @Override
@@ -108,6 +115,7 @@ public class ChaperoneActivity extends BaseActivity implements
         setContentView(R.layout.activity_chaperone);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        mGpsDropoffPrompted = false;
 
         mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
@@ -120,110 +128,11 @@ public class ChaperoneActivity extends BaseActivity implements
         int am_pm = c.get(Calendar.AM_PM);
         int day = c.get(Calendar.DAY_OF_WEEK);
         mTimeslot = "";
-        switch(day) {
-            case Calendar.SUNDAY:
-                mTimeslot = "sun";
-                break;
-            case Calendar.MONDAY:
-                mTimeslot = "mon";
-                break;
-            case Calendar.TUESDAY:
-                mTimeslot = "tue";
-                break;
-            case Calendar.WEDNESDAY:
-                mTimeslot = "wed";
-                break;
-            case Calendar.THURSDAY:
-                mTimeslot = "thu";
-                break;
-            case Calendar.FRIDAY:
-                mTimeslot = "fri";
-                break;
-            case Calendar.SATURDAY:
-                mTimeslot = "sat";
-                break;
-        }
-        if(am_pm == Calendar.AM) {
-            mTimeslot += "_am";
-        } else {
-            mTimeslot += "_pm";
-        }
-        // mTimeslot = "mon_am";
-        Log.d(TAG, "Timeslot: " + mTimeslot);
-        // TODO: remove this line
-        mTimeslot = "mon_am";
-
-        // TODO: don't hardcode these pls
-        DatabaseReference chapRef = FirebaseUtil.getUserRef().child(FirebaseUtil.getCurrentUserId());
-        chapRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        FirebaseUtil.getBaseRef().child("current_timeslot").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                User chap = dataSnapshot.getValue(User.class);
-                // TODO: Select route based on time
-                if(chap.getRoutes() == null || chap.getRoutes().isEmpty()) {
-                    Toast.makeText(ChaperoneActivity.this, "User is not chaperone of any routes", Toast.LENGTH_LONG).show();
-                    Log.d(TAG, "No routes");
-                    return;
-                }
-                mRouteKey = chap.getRoutes().keySet().toArray()[0].toString();
-                DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey);
-                routeRef.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if(!dataSnapshot.exists() || !dataSnapshot.hasChild("public") || !dataSnapshot.hasChild("private")) {
-                            Log.d(TAG, "Route does not exist");
-                            return;
-                        }
-                        mRoutePublic = dataSnapshot.child("public").getValue(RoutePublic.class);
-                        mRoutePrivate = dataSnapshot.child("private").getValue(RoutePrivate.class);
-                        Log.d(TAG, "Route name " + mRoutePublic.getName());
-                        if(mRoutePrivate.getStudents() == null) {
-                            Log.d(TAG, "No students in route " + mRoutePublic.getName());
-                            return;
-                        }
-                        if(mRoutePrivate.getStudents().get(mTimeslot) == null) {
-                            Log.d(TAG, "No students in timeslot " + mTimeslot);
-                            return;
-                        }
-                        for(String studentKey: mRoutePrivate.getStudents().get(mTimeslot).keySet()) {
-                            Log.d(TAG, "Student key " + studentKey);
-                            DatabaseReference studentRef = FirebaseUtil.getStudentsRef().child(studentKey);
-                            studentRef.addValueEventListener(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                    Log.d(TAG, "Student reference " + dataSnapshot.getRef().toString());
-                                    Student s = dataSnapshot.getValue(Student.class);
-                                    s.setKey(dataSnapshot.getKey().toString());
-                                    boolean found = false;
-                                    for(int i = 0; i < mStudents.size(); i++) {
-                                        Student student = mStudents.get(i);
-                                        if(student.getKey().equals(s.getKey())) {
-                                            mStudents.set(i, s);
-                                            found = true;
-                                            break;
-                                        }
-                                    }
-                                    if(!found) {
-                                        Log.d(TAG, "Adding student " + s.getName());
-                                        Log.d(TAG, "Adding BT " + s.getBluetooth());
-                                        mStudents.add(s);
-                                        //mExpectedBluetooth.add(s.getBluetooth());
-                                    }
-                                    mStudentAdapter.notifyDataSetChanged();
-                                    Log.d(TAG, "student name: " + s.getName());
-                                }
-
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
-
-                                }
-                            });
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError firebaseError) { }
-                });
+                mTimeslot = dataSnapshot.getValue().toString();
+                Log.d(TAG, "Timeslot: " + mTimeslot);
             }
 
             @Override
@@ -231,17 +140,135 @@ public class ChaperoneActivity extends BaseActivity implements
 
             }
         });
+        // mTimeslot = "mon_am";
+        // TODO: remove this line
+        // mTimeslot = "mon_am";
 
+        // TODO: don't hardcode these pls
+        FirebaseUtil.getBaseRef().child("current_timeslot").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                mTimeslot = dataSnapshot.getValue().toString();
+                Log.d(TAG, "Timeslot: " + mTimeslot);
+
+                DatabaseReference chapRef = FirebaseUtil.getUserRef().child(FirebaseUtil.getCurrentUserId());
+                chapRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        User chap = dataSnapshot.getValue(User.class);
+                        // TODO: Select route based on time
+                        if(chap.getRoutes() == null || chap.getRoutes().isEmpty()) {
+                            Toast.makeText(ChaperoneActivity.this, "User is not chaperone of any routes", Toast.LENGTH_LONG).show();
+                            Log.d(TAG, "No routes");
+                            return;
+                        }
+
+                        mRouteKey = chap.getRoutes().keySet().toArray()[0].toString();
+                        DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey);
+                        routeRef.addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                if(!dataSnapshot.exists() || !dataSnapshot.hasChild("public") || !dataSnapshot.hasChild("private")) {
+                                    Log.d(TAG, "Route does not exist");
+                                    return;
+                                }
+                                mRoutePublic = dataSnapshot.child("public").getValue(RoutePublic.class);
+                                mRoutePrivate = dataSnapshot.child("private").getValue(RoutePrivate.class);
+                                Log.d(TAG, "Route name " + mRoutePublic.getName());
+                                if(mRoutePrivate.getStudents() == null) {
+                                    Log.d(TAG, "No students in route " + mRoutePublic.getName());
+                                    return;
+                                }
+                                if(mRoutePrivate.getStudents().get(mTimeslot) == null) {
+                                    Log.d(TAG, "No students in timeslot " + mTimeslot);
+                                    return;
+                                }
+                                String schoolKey = mRoutePublic.getSchool();
+                                Log.d(TAG, "School key: " + schoolKey);
+                                DatabaseReference schoolRef = FirebaseUtil.getSchoolRef().child(schoolKey);
+                                DatabaseReference latRef = schoolRef.child("lat");
+                                DatabaseReference lngRef = schoolRef.child("lng");
+                                latRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        mSchoolLat = dataSnapshot.getValue(Double.class);
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+
+                                    }
+                                });
+                                lngRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        mSchoolLng = dataSnapshot.getValue(Double.class);
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+
+                                    }
+                                });
+                                for(String studentKey: mRoutePrivate.getStudents().get(mTimeslot).keySet()) {
+                                    Log.d(TAG, "Student key " + studentKey);
+                                    DatabaseReference studentRef = FirebaseUtil.getStudentsRef().child(studentKey);
+                                    studentRef.addValueEventListener(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(DataSnapshot dataSnapshot) {
+                                            Log.d(TAG, "Student reference " + dataSnapshot.getRef().toString());
+                                            Student s = dataSnapshot.getValue(Student.class);
+                                            s.setKey(dataSnapshot.getKey().toString());
+                                            boolean found = false;
+                                            for(int i = 0; i < mStudents.size(); i++) {
+                                                Student student = mStudents.get(i);
+                                                if(student.getKey().equals(s.getKey())) {
+                                                    mStudents.set(i, s);
+                                                    found = true;
+                                                    break;
+                                                }
+                                            }
+                                            if(!found) {
+                                                Log.d(TAG, "Adding student " + s.getName());
+                                                Log.d(TAG, "Adding BT " + s.getBluetooth());
+                                                mStudents.add(s);
+                                                //mExpectedBluetooth.add(s.getBluetooth());
+                                            }
+                                            mStudentAdapter.notifyDataSetChanged();
+                                            Log.d(TAG, "student name: " + s.getName());
+                                        }
+
+                                        @Override
+                                        public void onCancelled(DatabaseError databaseError) {
+
+                                        }
+                                    });
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError firebaseError) { }
+                        });
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
         setTitle("Today's Bus");
 
-        //mExpectedStudents = new ArrayList<Student>();
-        //mFoundStudents = new ArrayList<Student>();
-        //mPickedUpStudents = new ArrayList<Student>();
-        //mLostStudents = new ArrayList<Student>();
         mStudents = new ArrayList<Student>();
         mLostStudentPopups = new ArrayList<String>();
 
-        //mExpectedBluetooth = new ArrayList<>();
         mFoundBluetooth = new ArrayList<>();
 
         // Use this check to determine whether BLE is supported on the device.  Then you can
@@ -257,22 +284,22 @@ public class ChaperoneActivity extends BaseActivity implements
             finish();
         }
         // Prompt for permissions
-        if (Build.VERSION.SDK_INT >= 23) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                Log.w("BleActivity", "Location access not granted!");
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSION_RESPONSE);
-            }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.w("BleActivity", "Location access not granted!");
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_COARSE_LOCATION);
+        } else {
+            Log.d(TAG, "Turning on BLE");
+            turnonBLE();
+            discoverBLEDevices();
         }
-        // Prompt for permissions
-        if (Build.VERSION.SDK_INT >= 23) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                Log.w("BleActivity", "Location access not granted!");
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSION_RESPONSE);
-            }
+        if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.w("BleActivity", "Location access not granted!");
+            ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_FINE_LOCATION);
+        } else {
+            Log.d(TAG, "Location permission granted");
+            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                    GPS_TIME_INTERVAL, GPS_DISTANCE, GPSListener);
         }
-
-        turnonBLE();
-        discoverBLEDevices();
 
         mCurrentDay = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
 
@@ -306,6 +333,7 @@ public class ChaperoneActivity extends BaseActivity implements
                                 // Set all found students as picked up
                                 DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("status");
                                 studentStatusRef.setValue("picked up");
+                                Log.d(TAG, "Setting picked up for " + s.getName() + " to true");
                             }
                             DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey).child("private").child("status");
                             routeRef.setValue("picked up");
@@ -564,6 +592,18 @@ public class ChaperoneActivity extends BaseActivity implements
                             && !s.getStatus().toLowerCase().equals("lost")
                             && !mLostStudentPopups.contains(s.getKey())) {
                         Log.d(TAG, "Could not find student " + s.getName());
+                        PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0 /* Request code */, new Intent(mContext, ChaperoneActivity.class),
+                                PendingIntent.FLAG_ONE_SHOT);
+                        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext)
+                                .setSmallIcon(R.drawable.bus)
+                                .setContentTitle("Child Lost")
+                                .setContentText(s.getName() + " not found")
+                                .setContentIntent(pendingIntent);
+
+                        NotificationManager notificationManager =
+                                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                        notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
                         mLostStudentPopups.add(s.getKey());
                         AlertDialog.Builder lostAlertBuilder = new AlertDialog.Builder(mContext);
                         lostAlertBuilder.setMessage(s.getName() + " not found")
@@ -575,13 +615,15 @@ public class ChaperoneActivity extends BaseActivity implements
                                 DatabaseReference studentLocationRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("location");
                                 if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                                     Log.w("BleActivity", "Location access not granted!");
-                                    ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSION_RESPONSE);
+                                    ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_FINE_LOCATION);
+                                } else {
+                                    Log.d(TAG, "Getting last known location");
+                                    Location lastKnownLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                                    Map locationValue = new HashMap();
+                                    locationValue.put("lat", lastKnownLocation.getLatitude());
+                                    locationValue.put("lng", lastKnownLocation.getLongitude());
+                                    studentLocationRef.setValue(locationValue);
                                 }
-                                Location lastKnownLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                                Map locationValue = new HashMap();
-                                locationValue.put("lat", lastKnownLocation.getLatitude());
-                                locationValue.put("lng", lastKnownLocation.getLongitude());
-                                studentLocationRef.setValue(locationValue);
                                 studentStatusRef.setValue("lost");
                                 mLostStudentPopups.remove(s.getKey());
                                 dialog.dismiss();
@@ -610,4 +652,120 @@ public class ChaperoneActivity extends BaseActivity implements
             scanHandler.postDelayed(startScan, 5000); // start scan after 100 ms
         }
     };
+
+    private LocationListener GPSListener = new LocationListener(){
+        public void onLocationChanged(Location location) {
+            // update location
+            chapLocation = location;
+            if(mSchoolLat == null || mSchoolLng == null) {
+                return;
+            }
+            Log.d(TAG, "Chap lat, lng: " + chapLocation.getLatitude() + ", " + chapLocation.getLongitude());
+            Log.d(TAG, "Lat abs: " + (Math.abs(chapLocation.getLatitude() - mSchoolLat) < 0.001));
+            Log.d(TAG, "Lng abs: " + (Math.abs(chapLocation.getLongitude() - mSchoolLng) < 0.001));
+            Toast.makeText(ChaperoneActivity.this, "Lat abs : " + (Math.abs(chapLocation.getLatitude() - mSchoolLat) < 0.001)
+                    + "Lng abs: " + (Math.abs(chapLocation.getLongitude() - mSchoolLng) < 0.001)
+                    + "Lat, Lng: " + chapLocation.getLatitude() + ", " + chapLocation.getLongitude(), Toast.LENGTH_SHORT).show();
+            if(Math.abs(chapLocation.getLatitude() - mSchoolLat) < 0.001 && Math.abs(chapLocation.getLongitude() - mSchoolLng) < 0.001) {
+                Log.d(TAG, "Chap in range of school");
+                if(!mGpsDropoffPrompted && mRoutePrivate.getStatus().toLowerCase().equals("picked up")) {
+                    AlertDialog.Builder dropOffBuilder = new AlertDialog.Builder(mContext);
+                    final ArrayList<Student> pickedUpStudents = new ArrayList<Student>();
+                    String studentNames = "";
+                    for(Student s : mStudents) {
+                        if(s.getStatus().toLowerCase().equals("picked up")) {
+                            studentNames += "\n" + s.getName();
+                            pickedUpStudents.add(s);
+                        }
+                    }
+                    dropOffBuilder.setMessage("Confirm dropoff of" + studentNames)
+                            .setTitle("Dropoff Confirmation");
+                    dropOffBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // User clicked OK button
+                            for(Student s : pickedUpStudents) {
+                                // Set all found students as picked up
+                                DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("status");
+                                studentStatusRef.setValue("dropped off");
+                            }
+                            Log.d(TAG, "Setting dropped off to true");
+                            DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey).child("private").child("status");
+                            routeRef.setValue("dropped off");
+                            mGpsDropoffPrompted = false;
+                            dialog.dismiss();
+                        }
+                    });
+                    dropOffBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // User cancelled the dialog
+                            mGpsDropoffPrompted = false;
+                            dialog.dismiss();
+                        }
+                    });
+                    AlertDialog dropOffAlert = dropOffBuilder.create();
+                    dropOffAlert.setCanceledOnTouchOutside(false);
+                    if(!((Activity)mContext).isFinishing()) {
+                        mGpsDropoffPrompted = true;
+                        dropOffAlert.show();
+                    }
+                }
+            }
+            Toast.makeText(ChaperoneActivity.this, "Loc changed", Toast.LENGTH_LONG);
+            //mLocationManager.removeUpdates(GPSListener); // remove this listener
+        }
+
+        public void onProviderDisabled(String provider) {
+        }
+
+        public void onProviderEnabled(String provider) {
+        }
+
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+        }
+    };
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_COARSE_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, yay! Do the
+                    // task you need to do.
+                    Log.d(TAG, "Coarse location perms granted");
+
+                    turnonBLE();
+                    discoverBLEDevices();
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+            case MY_PERMISSIONS_REQUEST_FINE_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, yay! Do the
+                    // task you need to do.
+                    Log.d(TAG, "Fine location perms granted");
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
+    }
 }
