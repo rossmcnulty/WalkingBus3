@@ -3,6 +3,7 @@ package ut.walkingbus;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
@@ -79,6 +80,7 @@ public class ChaperoneActivity extends BaseActivity implements
     //private ArrayList<String> mExpectedBluetooth;
     private ArrayList<String> mFoundBluetooth;
     private ArrayList<String> mPickedUpBluetooth;
+    private Map<String, Integer> mBluetoothMisses;
 
     private CircleImageView mProfilePhoto;
     private TextView mProfileEmail;
@@ -101,6 +103,8 @@ public class ChaperoneActivity extends BaseActivity implements
     private static final int GPS_TIME_INTERVAL = 1000;
     private static final int GPS_DISTANCE = 0;
     private static final int RC_SIGN_IN = 103;
+    private int mLostCalls;
+    private int mNotLostCalls;
 
     @Override
     public void onResume() {
@@ -116,6 +120,39 @@ public class ChaperoneActivity extends BaseActivity implements
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         mGpsDropoffPrompted = false;
+        mBluetoothMisses = new HashMap<>();
+
+        mLostCalls = 0;
+        mNotLostCalls = 1;
+
+        Log.d(TAG, "New activity created");
+
+        if(getIntent().hasExtra("NOTIFY_CHILD") && getIntent().hasExtra("NOTIFY_IS_LOST")) {
+            String childKey = getIntent().getStringExtra("NOTIFY_CHILD");
+            boolean isLost = getIntent().getBooleanExtra("NOTIFY_IS_LOST", true);
+            Log.d(TAG, "Has extra info: " + childKey + ", " + isLost);
+
+            if(isLost) {
+                DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(childKey).child("status");
+                DatabaseReference studentLocationRef = FirebaseUtil.getStudentsRef().child(childKey).child("location");
+                if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    Log.w("BleActivity", "Location access not granted!");
+                    ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_FINE_LOCATION);
+                } else {
+                    Log.d(TAG, "Getting last known location");
+                    Location lastKnownLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                    Map locationValue = new HashMap();
+                    locationValue.put("lat", lastKnownLocation.getLatitude());
+                    locationValue.put("lng", lastKnownLocation.getLongitude());
+                    studentLocationRef.setValue(locationValue);
+                }
+                studentStatusRef.setValue("lost");
+                mLostStudentPopups.remove(childKey);
+            } else {
+                // User cancelled the dialog
+                mLostStudentPopups.remove(childKey);
+            }
+        }
 
         mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
@@ -329,11 +366,18 @@ public class ChaperoneActivity extends BaseActivity implements
                     pickUpBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             // User clicked OK button
-                            for(Student s : foundStudents) {
+                            for(Student s : mStudents) {
                                 // Set all found students as picked up
-                                DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("status");
-                                studentStatusRef.setValue("picked up");
-                                Log.d(TAG, "Setting picked up for " + s.getName() + " to true");
+                                if(foundStudents.contains(s)) {
+                                    DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("status");
+                                    studentStatusRef.setValue("picked up");
+                                    Log.d(TAG, "Setting picked up for " + s.getName() + " to true");
+                                } else {
+                                    // student left behind
+                                    DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("status");
+                                    studentStatusRef.setValue("left behind");
+                                    Log.d(TAG, "Setting left behind for " + s.getName() + " to true");
+                                }
                             }
                             DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey).child("private").child("status");
                             routeRef.setValue("picked up");
@@ -435,6 +479,44 @@ public class ChaperoneActivity extends BaseActivity implements
     }
 
     @Override
+    public void onNewIntent(Intent intent) {
+        Log.d(TAG, "New intent");
+        if(intent.hasExtra("NOTIFY_ACTION")) {
+            Log.d(TAG, "Intent extras " + intent.getStringExtra("NOTIFY_ACTION"));
+        }
+        if(intent.hasExtra("NOTIFY_CHILD") && intent.hasExtra("NOTIFY_IS_LOST")) {
+            String childKey = intent.getStringExtra("NOTIFY_CHILD");
+            boolean isLost = intent.getBooleanExtra("NOTIFY_IS_LOST", true);
+            Log.d(TAG, "Has extra info: " + childKey + ", " + isLost);
+
+            NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.cancel(childKey.hashCode());
+
+            if(isLost) {
+                DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(childKey).child("status");
+                DatabaseReference studentLocationRef = FirebaseUtil.getStudentsRef().child(childKey).child("location");
+                if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    Log.w("BleActivity", "Location access not granted!");
+                    ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_FINE_LOCATION);
+                } else {
+                    Log.d(TAG, "Getting last known location");
+                    Location lastKnownLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                    Map locationValue = new HashMap();
+                    locationValue.put("lat", lastKnownLocation.getLatitude());
+                    locationValue.put("lng", lastKnownLocation.getLongitude());
+                    studentLocationRef.setValue(locationValue);
+                }
+                studentStatusRef.setValue("lost");
+                mLostStudentPopups.remove(childKey);
+            } else {
+                // User cancelled the dialog
+                Log.d(TAG, "Child marked as not lost");
+                mLostStudentPopups.remove(childKey);
+            }
+        }
+    }
+
+    @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
@@ -505,7 +587,7 @@ public class ChaperoneActivity extends BaseActivity implements
     private Runnable startScan = new Runnable() {
         @Override
         public void run() {
-            scanHandler.postDelayed(stopScan, 5000); // invoke stop scan after 5000 ms
+            scanHandler.postDelayed(stopScan, 10000); // invoke stop scan after 10 s
             mBLEAdapter.startLeScan(mLeScanCallback);
         }
     };
@@ -570,77 +652,137 @@ public class ChaperoneActivity extends BaseActivity implements
                     // look for students that have become lost
 
                     boolean found = false;
-                    if(s.getStatus().toLowerCase().equals("waiting")) {
+                    if(s.getStatus().toLowerCase().equals("left behind")) {
                         // don't worry about non-picked up students
                         Log.d(TAG, "Student " + s.getName() + " was never picked up");
-                        break;
+                        continue;
                     }
 
                     for (BluetoothDevice d : sensorTagDevices) {
                         if (d.getAddress().equals(s.getBluetooth())) {
                             // found a matching student BT
                             found = true;
+                            mBluetoothMisses.put(s.getKey(), 0);
                             if (s.getStatus().toLowerCase().equals("lost")) {
                                 Log.d(TAG, "Recovered lost student " + s.getName());
+                                // Toast.makeText(ChaperoneActivity.this, "Lost student " + s.getName() + " has come back in range", Toast.LENGTH_SHORT).show();
+                                PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0 /* Request code */, new Intent(mContext, ChaperoneActivity.class),
+                                        PendingIntent.FLAG_ONE_SHOT);
+                                NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext)
+                                        .setSmallIcon(R.drawable.bus)
+                                        .setContentTitle("Child Found")
+                                        .setPriority(Notification.PRIORITY_MAX)
+                                        .setContentText(s.getName() + " has come back into range")
+                                        .setContentIntent(pendingIntent);
+
+                                NotificationManager notificationManager =
+                                        (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                                notificationManager.notify(s.getKey().hashCode() /* ID of notification */, notificationBuilder.build());
                                 DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("status");
+                                if(mRoutePrivate.getStatus().toLowerCase().equals("dropped off")) {
+                                    studentStatusRef.setValue("dropped off");
+                                }
                                 studentStatusRef.setValue("picked up");
                             }
                         }
                     }
 
+                    if(!mBluetoothMisses.containsKey(s.getKey())) {
+                        // initialize misses to 0 for this child
+                        mBluetoothMisses.put(s.getKey(), 0);
+                    }
+
+                    Log.d(TAG, "LostStudentPopups " + mLostStudentPopups.contains(s.getKey()));
+
                     if (!found && !mRoutePrivate.getStatus().toLowerCase().equals("dropped off")
                             && !s.getStatus().toLowerCase().equals("lost")
                             && !mLostStudentPopups.contains(s.getKey())) {
-                        Log.d(TAG, "Could not find student " + s.getName());
-                        PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0 /* Request code */, new Intent(mContext, ChaperoneActivity.class),
-                                PendingIntent.FLAG_ONE_SHOT);
-                        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext)
-                                .setSmallIcon(R.drawable.bus)
-                                .setContentTitle("Child Lost")
-                                .setContentText(s.getName() + " not found")
-                                .setContentIntent(pendingIntent);
+                        int currentMisses = mBluetoothMisses.get(s.getKey());
+                        Log.d(TAG, "Current misses for " + s.getKey() + " = " + currentMisses);
+                        if(currentMisses > 1) {
+                            currentMisses = 0;
+                            mBluetoothMisses.put(s.getKey(), currentMisses);
 
-                        NotificationManager notificationManager =
-                                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                            Log.d(TAG, "Could not find student " + s.getName());
+                            PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0 /* Request code */, new Intent(mContext, ChaperoneActivity.class),
+                                    PendingIntent.FLAG_ONE_SHOT);
 
-                        notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
-                        mLostStudentPopups.add(s.getKey());
-                        AlertDialog.Builder lostAlertBuilder = new AlertDialog.Builder(mContext);
-                        lostAlertBuilder.setMessage(s.getName() + " not found")
-                                .setTitle("Student Not Found");
-                        lostAlertBuilder.setPositiveButton("Confirm Lost", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                // User clicked OK button
-                                DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("status");
-                                DatabaseReference studentLocationRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("location");
-                                if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                                    Log.w("BleActivity", "Location access not granted!");
-                                    ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_FINE_LOCATION);
-                                } else {
-                                    Log.d(TAG, "Getting last known location");
-                                    Location lastKnownLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                                    Map locationValue = new HashMap();
-                                    locationValue.put("lat", lastKnownLocation.getLatitude());
-                                    locationValue.put("lng", lastKnownLocation.getLongitude());
-                                    studentLocationRef.setValue(locationValue);
+                            Intent notLostIntent = new Intent(mContext, ChaperoneActivity.class);
+                            notLostIntent.putExtra("NOTIFY_CHILD", s.getKey());
+                            notLostIntent.putExtra("NOTIFY_IS_LOST", false);
+                            notLostIntent.putExtra("NOTIFY_ACTION", "NOT LOST");
+                            notLostIntent.putExtra("NOTIFY_ID", s.getKey().hashCode());
+                            PendingIntent notLostPendingIntent = PendingIntent.getActivity(mContext, mNotLostCalls /* Request code */, notLostIntent,
+                                    PendingIntent.FLAG_UPDATE_CURRENT);
+                            mNotLostCalls += 2;
+                            NotificationCompat.Action notLostAction = new NotificationCompat.Action.Builder(R.drawable.ic_clear, "Not Lost", notLostPendingIntent).build();
+
+                            Intent lostIntent = new Intent(mContext, ChaperoneActivity.class);
+                            lostIntent.putExtra("NOTIFY_CHILD", s.getKey());
+                            lostIntent.putExtra("NOTIFY_IS_LOST", true);
+                            lostIntent.putExtra("NOTIFY_ACTION", "LOST");
+                            lostIntent.putExtra("NOTIFY_ID", s.getKey().hashCode());
+                            PendingIntent lostPendingIntent = PendingIntent.getActivity(mContext, mLostCalls /* Request code */, lostIntent,
+                                    PendingIntent.FLAG_UPDATE_CURRENT);
+                            mLostCalls += 2;
+                            NotificationCompat.Action lostAction = new NotificationCompat.Action.Builder(R.drawable.ic_check, "Lost", lostPendingIntent).build();
+
+                            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext)
+                                    .setSmallIcon(R.drawable.bus)
+                                    .setContentTitle("Child Lost")
+                                    .setContentText(s.getName() + " not found")
+                                    .setPriority(Notification.PRIORITY_MAX)
+                                    //.setContentIntent(pendingIntent)
+                                    .addAction(lostAction)
+                                    .addAction(notLostAction);
+
+                            NotificationManager notificationManager =
+                                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                            notificationManager.notify(s.getKey().hashCode() /* ID of notification */, notificationBuilder.build());
+                            mLostStudentPopups.add(s.getKey());
+                            AlertDialog.Builder lostAlertBuilder = new AlertDialog.Builder(mContext);
+                            lostAlertBuilder.setMessage(s.getName() + " not found")
+                                    .setTitle("Student Not Found");
+                            lostAlertBuilder.setPositiveButton("Confirm Lost", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    // User clicked OK button
+                                    DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("status");
+                                    DatabaseReference studentLocationRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("location");
+                                    if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                        Log.w("BleActivity", "Location access not granted!");
+                                        ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_FINE_LOCATION);
+                                    } else {
+                                        Log.d(TAG, "Getting last known location");
+                                        Location lastKnownLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                                        Map locationValue = new HashMap();
+                                        locationValue.put("lat", lastKnownLocation.getLatitude());
+                                        locationValue.put("lng", lastKnownLocation.getLongitude());
+                                        studentLocationRef.setValue(locationValue);
+                                    }
+                                    studentStatusRef.setValue("lost");
+                                    mLostStudentPopups.remove(s.getKey());
+                                    dialog.dismiss();
                                 }
-                                studentStatusRef.setValue("lost");
-                                mLostStudentPopups.remove(s.getKey());
-                                dialog.dismiss();
-                            }
-                        });
-                        lostAlertBuilder.setNegativeButton("Not Lost", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                // User cancelled the dialog
-                                mLostStudentPopups.remove(s.getKey());
-                                dialog.dismiss();
-                            }
-                        });
+                            });
+                            lostAlertBuilder.setNegativeButton("Not Lost", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    // User cancelled the dialog
+                                    mLostStudentPopups.remove(s.getKey());
+                                    dialog.dismiss();
+                                }
+                            });
 
-                        AlertDialog lostAlert = lostAlertBuilder.create();
-                        lostAlert.setCanceledOnTouchOutside(false);
-                        if(!((Activity)mContext).isFinishing()) {
-                            lostAlert.show();
+                            AlertDialog lostAlert = lostAlertBuilder.create();
+                            lostAlert.setCanceledOnTouchOutside(false);
+                            if(!((Activity)mContext).isFinishing()) {
+                                //lostAlert.show();
+                            }
+                        } else {
+                            currentMisses += 1;
+                            Log.d(TAG, "Current misses now " + currentMisses);
+                            mBluetoothMisses.put(s.getKey(), currentMisses);
                         }
                     }
                 }
@@ -649,7 +791,7 @@ public class ChaperoneActivity extends BaseActivity implements
             sensorTagDevices.clear();
 
             mBLEAdapter.stopLeScan(mLeScanCallback);
-            scanHandler.postDelayed(startScan, 5000); // start scan after 100 ms
+            scanHandler.postDelayed(startScan, 1000); // start scan after 1000 ms
         }
     };
 
@@ -660,53 +802,93 @@ public class ChaperoneActivity extends BaseActivity implements
             if(mSchoolLat == null || mSchoolLng == null) {
                 return;
             }
-            Log.d(TAG, "Chap lat, lng: " + chapLocation.getLatitude() + ", " + chapLocation.getLongitude());
-            Log.d(TAG, "Lat abs: " + (Math.abs(chapLocation.getLatitude() - mSchoolLat) < 0.001));
-            Log.d(TAG, "Lng abs: " + (Math.abs(chapLocation.getLongitude() - mSchoolLng) < 0.001));
-            Toast.makeText(ChaperoneActivity.this, "Lat abs : " + (Math.abs(chapLocation.getLatitude() - mSchoolLat) < 0.001)
-                    + "Lng abs: " + (Math.abs(chapLocation.getLongitude() - mSchoolLng) < 0.001)
-                    + "Lat, Lng: " + chapLocation.getLatitude() + ", " + chapLocation.getLongitude(), Toast.LENGTH_SHORT).show();
-            if(Math.abs(chapLocation.getLatitude() - mSchoolLat) < 0.001 && Math.abs(chapLocation.getLongitude() - mSchoolLng) < 0.001) {
-                Log.d(TAG, "Chap in range of school");
-                if(!mGpsDropoffPrompted && mRoutePrivate.getStatus().toLowerCase().equals("picked up")) {
-                    AlertDialog.Builder dropOffBuilder = new AlertDialog.Builder(mContext);
-                    final ArrayList<Student> pickedUpStudents = new ArrayList<Student>();
-                    String studentNames = "";
-                    for(Student s : mStudents) {
-                        if(s.getStatus().toLowerCase().equals("picked up")) {
-                            studentNames += "\n" + s.getName();
-                            pickedUpStudents.add(s);
-                        }
-                    }
-                    dropOffBuilder.setMessage("Confirm dropoff of" + studentNames)
-                            .setTitle("Dropoff Confirmation");
-                    dropOffBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            // User clicked OK button
-                            for(Student s : pickedUpStudents) {
-                                // Set all found students as picked up
-                                DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("status");
-                                studentStatusRef.setValue("dropped off");
+            if(mTimeslot.toLowerCase().contains("am")) {
+                Log.d(TAG, "Chap lat, lng: " + chapLocation.getLatitude() + ", " + chapLocation.getLongitude());
+                Log.d(TAG, "School lat abs: " + (Math.abs(chapLocation.getLatitude() - mSchoolLat) < 0.001));
+                Log.d(TAG, "School lng abs: " + (Math.abs(chapLocation.getLongitude() - mSchoolLng) < 0.001));
+                //Toast.makeText(ChaperoneActivity.this, "Lat abs : " + (Math.abs(chapLocation.getLatitude() - mSchoolLat) < 0.001)
+                //        + "Lng abs: " + (Math.abs(chapLocation.getLongitude() - mSchoolLng) < 0.001)
+                //        + "Lat, Lng: " + chapLocation.getLatitude() + ", " + chapLocation.getLongitude(), Toast.LENGTH_SHORT).show();
+                if (Math.abs(chapLocation.getLatitude() - mSchoolLat) < 0.001 && Math.abs(chapLocation.getLongitude() - mSchoolLng) < 0.001) {
+                    Log.d(TAG, "Chap in range of school");
+                    if (!mGpsDropoffPrompted && mRoutePrivate.getStatus().toLowerCase().equals("picked up")) {
+                        AlertDialog.Builder dropOffBuilder = new AlertDialog.Builder(mContext);
+                        final ArrayList<Student> pickedUpStudents = new ArrayList<Student>();
+                        String studentNames = "";
+                        for (Student s : mStudents) {
+                            if (s.getStatus().toLowerCase().equals("picked up")) {
+                                studentNames += "\n" + s.getName();
+                                pickedUpStudents.add(s);
                             }
-                            Log.d(TAG, "Setting dropped off to true");
-                            DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey).child("private").child("status");
-                            routeRef.setValue("dropped off");
-                            mGpsDropoffPrompted = false;
-                            dialog.dismiss();
                         }
-                    });
-                    dropOffBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            // User cancelled the dialog
-                            mGpsDropoffPrompted = false;
-                            dialog.dismiss();
+                        PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0 /* Request code */, new Intent(mContext, ChaperoneActivity.class),
+                                PendingIntent.FLAG_ONE_SHOT);
+                        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext)
+                                .setSmallIcon(R.drawable.bus)
+                                .setContentTitle("Arrived at School Dropoff")
+                                .setPriority(Notification.PRIORITY_MAX)
+                                .setContentText("Dropping off children")
+                                .setContentIntent(pendingIntent);
+
+                        NotificationManager notificationManager =
+                                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                        notificationManager.notify(1 /* ID of notification */, notificationBuilder.build());
+                        for (Student s : pickedUpStudents) {
+                            // Set all found students as picked up
+                            DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("status");
+                            studentStatusRef.setValue("dropped off");
                         }
-                    });
-                    AlertDialog dropOffAlert = dropOffBuilder.create();
-                    dropOffAlert.setCanceledOnTouchOutside(false);
-                    if(!((Activity)mContext).isFinishing()) {
-                        mGpsDropoffPrompted = true;
-                        dropOffAlert.show();
+                        Log.d(TAG, "Setting dropped off to true");
+                        DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey).child("private").child("status");
+                        routeRef.setValue("dropped off");
+                        mGpsDropoffPrompted = false;
+                    }
+                }
+            } else {
+                // pm
+                Double routeLat = mRoutePublic.getLocation().get("lat");
+                Double routeLng = mRoutePublic.getLocation().get("lng");
+                Log.d(TAG, "Chap lat, lng: " + chapLocation.getLatitude() + ", " + chapLocation.getLongitude());
+                Log.d(TAG, "Route lat abs: " + (Math.abs(chapLocation.getLatitude() - routeLat) < 0.001));
+                Log.d(TAG, "Route lng abs: " + (Math.abs(chapLocation.getLongitude() - routeLng) < 0.001));
+                //Toast.makeText(ChaperoneActivity.this, "Lat abs : " + (Math.abs(chapLocation.getLatitude() - mSchoolLat) < 0.001)
+                //        + "Lng abs: " + (Math.abs(chapLocation.getLongitude() - mSchoolLng) < 0.001)
+                //        + "Lat, Lng: " + chapLocation.getLatitude() + ", " + chapLocation.getLongitude(), Toast.LENGTH_SHORT).show();
+                if (Math.abs(chapLocation.getLatitude() - routeLat) < 0.001 && Math.abs(chapLocation.getLongitude() - routeLng) < 0.001) {
+                    Log.d(TAG, "Chap in range of route dropoff");
+                    if (!mGpsDropoffPrompted && mRoutePrivate.getStatus().toLowerCase().equals("picked up")) {
+                        AlertDialog.Builder dropOffBuilder = new AlertDialog.Builder(mContext);
+                        final ArrayList<Student> pickedUpStudents = new ArrayList<Student>();
+                        String studentNames = "";
+                        for (Student s : mStudents) {
+                            if (s.getStatus().toLowerCase().equals("picked up")) {
+                                studentNames += "\n" + s.getName();
+                                pickedUpStudents.add(s);
+                            }
+                        }
+                        PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0 /* Request code */, new Intent(mContext, ChaperoneActivity.class),
+                                PendingIntent.FLAG_ONE_SHOT);
+                        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext)
+                                .setSmallIcon(R.drawable.bus)
+                                .setContentTitle("Arrived at Route Dropoff")
+                                .setPriority(Notification.PRIORITY_MAX)
+                                .setContentText("Dropping off children")
+                                .setContentIntent(pendingIntent);
+
+                        NotificationManager notificationManager =
+                                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                        notificationManager.notify(1 /* ID of notification */, notificationBuilder.build());
+                        for (Student s : pickedUpStudents) {
+                            // Set all found students as picked up
+                            DatabaseReference studentStatusRef = FirebaseUtil.getStudentsRef().child(s.getKey()).child("status");
+                            studentStatusRef.setValue("dropped off");
+                        }
+                        Log.d(TAG, "Setting dropped off to true");
+                        DatabaseReference routeRef = FirebaseUtil.getRoutesRef().child(mRouteKey).child("private").child("status");
+                        routeRef.setValue("dropped off");
+                        mGpsDropoffPrompted = false;
                     }
                 }
             }

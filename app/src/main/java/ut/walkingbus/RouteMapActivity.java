@@ -134,8 +134,6 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
                                             route.setKey(routeKey);
                                             mRoutes.add(route);
                                             // TODO: get correct chap key based on DB structure decision
-                                            String chapKey = route.getChaperones().keySet().toArray()[0].toString();
-                                            Map<String, String> chaperone = route.getChaperones().get(chapKey);
 
                                             final Double lat = route.getLocation().get("lat");
                                             final Double lng = route.getLocation().get("lng");
@@ -143,9 +141,11 @@ public class RouteMapActivity extends FragmentActivity implements OnInfoWindowCl
                                             final String routeTime = route.getTime();
                                             final String routeName = route.getName();
                                             // final String routeKey = route.getKey();
-                                            final String chapName = chaperone.get("displayName");
-                                            final String chapPhone = chaperone.get("phone");
-                                            final String chapPhotoUrl = chaperone.get("photoUrl");
+                                            String chapKey = route.getChaperones() != null ? route.getChaperones().keySet().toArray()[0].toString() : null;
+                                            Map<String, String> chaperone = route.getChaperones() != null ? route.getChaperones().get(chapKey) : null;
+                                            final String chapName = route.getChaperones() != null ? chaperone.get("displayName") : "No chaperone assigned";
+                                            final String chapPhone = route.getChaperones() != null ? chaperone.get("phone") : "No phone number";
+                                            final String chapPhotoUrl = route.getChaperones() != null ? chaperone.get("photoUrl") : "";
 
                                             Log.d(TAG, "Route name: " + routeName);
 
