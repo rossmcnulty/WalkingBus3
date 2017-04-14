@@ -508,8 +508,14 @@ public class EditStudentActivity extends BaseActivity {
             TextView sensortag = (TextView)findViewById(R.id.add_bluetooth);
 
             if(!sensorTagDevices.isEmpty()) {
-                BluetoothDevice device = sensorTagDevices.get(0);
-                sensortag.setText(device.getAddress());
+                if(sensorTagDevices.size() > 1) {
+                    Toast.makeText(EditStudentActivity.this,
+                            "Multiple SensorTags detected, turn off other SensorTags",
+                            Toast.LENGTH_LONG).show();
+                } else {
+                    BluetoothDevice device = sensorTagDevices.get(0);
+                    sensortag.setText(device.getAddress());
+                }
             } else {
                 Toast.makeText(EditStudentActivity.this,
                         "Could not find a SensorTag device ",
