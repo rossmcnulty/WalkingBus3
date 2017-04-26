@@ -540,7 +540,18 @@ public class ChaperoneActivity extends BaseActivity implements
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
+        switch(id) {
+            case R.id.reset:
+                Log.d(TAG, "Reset pressed");
+                Map reset = new HashMap();
+                reset.put("/routes/" + mRouteKey + "/private/status", "waiting");
+                for(Student s : mStudents) {
+                    Log.d(TAG, "Student: " + s.getName());
+                    reset.put("/students/" + s.getKey() + "/status", "waiting");
+                }
+                FirebaseUtil.getBaseRef().updateChildren(reset);
+                break;
+        }
         return super.onOptionsItemSelected(item);
     }
 
