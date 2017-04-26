@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -19,6 +20,7 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
@@ -505,29 +507,44 @@ public class EditStudentActivity extends BaseActivity {
     private Runnable stopScan = new Runnable() {
         @Override
         public void run() {
-            TextView sensortag = (TextView)findViewById(R.id.add_bluetooth);
+            final TextView sensortag = (TextView)findViewById(R.id.add_bluetooth);
 
+            mBLEAdapter.stopLeScan(mLeScanCallback);
             if(!sensorTagDevices.isEmpty()) {
-                if(sensorTagDevices.size() > 1) {
-                    Toast.makeText(EditStudentActivity.this,
-                            "Multiple SensorTags detected, turn off other SensorTags",
-                            Toast.LENGTH_LONG).show();
-                } else {
-                    BluetoothDevice device = sensorTagDevices.get(0);
-                    sensortag.setText(device.getAddress());
+                AlertDialog.Builder sensorTagAlertBuilder = new AlertDialog.Builder(mContext);
+                ArrayList deviceAddresses = new ArrayList();
+                for(BluetoothDevice device: sensorTagDevices) {
+                    deviceAddresses.add(device.getAddress());
                 }
+                final CharSequence[] addresses = (CharSequence[]) deviceAddresses.toArray(new CharSequence[deviceAddresses.size()]);
+                sensorTagAlertBuilder.setSingleChoiceItems(addresses, -1, new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface d, int which) {
+                        Log.d(TAG, "Button clicked " + addresses[which]);
+                        sensortag.setText(addresses[which]);
+                        sensorTagDevices.clear();
+                        d.dismiss();
+                    }
+
+                });
+                sensorTagAlertBuilder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        sensorTagDevices.clear();
+                    }
+                });
+                sensorTagAlertBuilder.setTitle("Choose Device Address");
+                dismissProgressDialog();
+                sensorTagAlertBuilder.create().show();
             } else {
                 Toast.makeText(EditStudentActivity.this,
                         "Could not find a SensorTag device ",
                         Toast.LENGTH_LONG).show();
-            }
-
-            if(!allDevices.contains(sensorTagDevices)) {
                 sensorTagDevices.clear();
+                dismissProgressDialog();
             }
 
-            mBLEAdapter.stopLeScan(mLeScanCallback);
-            dismissProgressDialog();
         }
     };
 
