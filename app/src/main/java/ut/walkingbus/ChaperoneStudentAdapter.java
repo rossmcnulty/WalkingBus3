@@ -33,6 +33,11 @@ import ut.walkingbus.Models.RoutePublic;
 import ut.walkingbus.Models.Student;
 import ut.walkingbus.Models.User;
 
+/*
+    This is displayed in the Chaperone Activity. The adapter contains students assigned to the
+    chaperone's route for the selected day.
+ */
+
 public class ChaperoneStudentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final String TAG = "ChaperoneStudentAdapter";
     private static final int TYPE_HEADER = 0;

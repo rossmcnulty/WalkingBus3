@@ -2,6 +2,8 @@ package ut.walkingbus;
 
 /**
  * Created by Ross on 3/29/2017.
+ * This service is used to refresh the phone's FCM token whenever it changes.
+ * The FCM token is used to send notifications specifically to the user through Firebase.
  */
 
 import android.content.Context;

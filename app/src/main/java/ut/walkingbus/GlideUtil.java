@@ -2,6 +2,7 @@ package ut.walkingbus;
 
 /**
  * Created by Ross on 2/13/2017.
+ * Utility used to display circular student and parent account images.
  */
 
 import android.content.Context;

@@ -23,6 +23,12 @@ import ut.walkingbus.Models.School;
  * Created by Ross on 3/1/2017.
  */
 
+/**
+    This displays all available timeslots (Mon-Fri AM/PM) for a student and allows a parent to
+    select each timeslot to view the RouteMapActivity and assign routes.
+    Selected route names are shown when assigned.
+ */
+
 public class RoutesActivity extends BaseActivity {
     private static final String TAG = "RoutesActivity";
 

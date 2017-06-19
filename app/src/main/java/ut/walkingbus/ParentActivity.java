@@ -33,6 +33,11 @@ import java.util.ArrayList;
 import de.hdodenhof.circleimageview.CircleImageView;
 import ut.walkingbus.Models.Student;
 
+/**
+    This contains the menu, student adapter and controls, action button for creating a student.
+    This handles all Bluetooth interaction between student and chaperone.
+ */
+
 public class ParentActivity extends BaseActivity implements
         NavigationView.OnNavigationItemSelectedListener,
         GoogleApiClient.OnConnectionFailedListener  {

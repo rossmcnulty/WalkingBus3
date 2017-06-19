@@ -29,6 +29,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 
+/**
+    This is the initial activity for all users. It facilitates Google login and allows the user
+    to choose to login as a Parent or Chaperone.
+ */
+
 public class WelcomeActivity extends BaseActivity implements View.OnClickListener,
         GoogleApiClient.OnConnectionFailedListener {
 

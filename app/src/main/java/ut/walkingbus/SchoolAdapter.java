@@ -34,6 +34,8 @@ import static ut.walkingbus.R.layout.school;
 
 /**
  * Created by Ross on 2/24/2017.
+ * Adapter that holds schools when presented to parents. Handles parent adding themself to school
+ * via passcode.
  */
 
 

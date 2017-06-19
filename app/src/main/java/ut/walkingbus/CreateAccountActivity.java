@@ -24,6 +24,11 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 import static ut.walkingbus.WelcomeActivity.currentUser;
 
+/**
+    Screen that appears when a user first associates a Google account with the app.
+    There is currently no way to change submitted information.
+    This is how the database stores the user's phone number (which is important).
+ */
 public class CreateAccountActivity extends BaseActivity {
     private static final String TAG = "CreateAccountActivity";
 

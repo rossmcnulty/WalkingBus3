@@ -42,6 +42,11 @@ import ut.walkingbus.Models.Student;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
+/**
+    This is displayed in the Parent Activity. The adapter contains students created by the user.
+    There is currently no system to assign students to multiple parents.
+ */
+
 public class ParentStudentAdapter extends RecyclerView.Adapter<ParentStudentAdapter.MyViewHolder> {
     private static final String TAG = "ParentStudentAdapter";
 

@@ -55,6 +55,10 @@ import java.util.UUID;
 import ut.walkingbus.Models.School;
 import ut.walkingbus.Models.Student;
 
+/**
+    This handles the popup window for editing an existing student's information.
+ */
+
 public class EditStudentActivity extends BaseActivity {
     private static final String TAG = "EditStudentActivity";
 
@@ -505,6 +509,7 @@ public class EditStudentActivity extends BaseActivity {
 
 
     private Runnable stopScan = new Runnable() {
+
         @Override
         public void run() {
             final TextView sensortag = (TextView)findViewById(R.id.add_bluetooth);

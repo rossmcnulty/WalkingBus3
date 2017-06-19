@@ -58,6 +58,11 @@ import ut.walkingbus.Models.RoutePublic;
 import ut.walkingbus.Models.Student;
 import ut.walkingbus.Models.User;
 
+/**
+    This contains the menu, student adapter and controls, and route information. This handles
+    all Bluetooth interaction between student and chaperone.
+ */
+
 public class ChaperoneActivity extends BaseActivity implements
         NavigationView.OnNavigationItemSelectedListener,
         GoogleApiClient.OnConnectionFailedListener  {

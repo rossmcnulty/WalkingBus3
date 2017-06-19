@@ -11,6 +11,7 @@ import android.util.Log;
 
 /**
  * Created by Ross on 4/3/2017.
+ * Used to determine when chaperone phone is in proximity of school or route dropoff point.
  */
 
 public class LocationUpdateService extends Service {

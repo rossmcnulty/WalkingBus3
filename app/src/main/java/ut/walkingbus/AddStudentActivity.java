@@ -51,6 +51,12 @@ import java.util.Map;
 import ut.walkingbus.Models.School;
 import ut.walkingbus.Models.User;
 
+/**
+    This handles the popup window for creating a student and associating information.
+    Not all information has to be put into upon creation, and students can be edited later on
+    by the user.
+ */
+
 public class AddStudentActivity extends BaseActivity {
     private static final String TAG = "AddStudentActivity";
 

@@ -15,6 +15,11 @@ import java.util.Map;
 
 import ut.walkingbus.Models.School;
 
+/**
+    This is a page shown to a parent that wants to add themselves to a school through the side
+    menu. The parent needs the school's assigned database passcode to add themselves.
+ */
+
 public class RequestSchoolActivity extends BaseActivity {
     private static final String TAG = "RequestSchoolActivity";
 

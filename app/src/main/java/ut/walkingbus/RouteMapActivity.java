@@ -28,6 +28,12 @@ import ut.walkingbus.Models.School;
 
 import static ut.walkingbus.R.id.map;
 
+/**
+    This is a Google Map activity showing the child's school and route markers around the school.
+    Parents will click on a route to get more information, then click on that route marker
+    to assign the student to that route for the selected timeslot.
+ */
+
 public class RouteMapActivity extends FragmentActivity implements OnInfoWindowClickListener, OnMapReadyCallback {
     private static final String TAG = "RouteMapActivity";
 
